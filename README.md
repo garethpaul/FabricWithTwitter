@@ -1,5 +1,8 @@
 # FabricWithTwitter
 
+<!-- README-OVERVIEW-IMAGE -->
+![Project overview](docs/readme-overview.svg)
+
 ## Overview
 
 `garethpaul/FabricWithTwitter` is an Apple platform application or Objective-C/Swift sample. A simple application that showcases how to integrate Fabric with Twitter
@@ -76,4 +79,3 @@ Keep changes small and tied to the project that is already present in this repos
 Prior README summary:
 
 > FabricWithTwitter <!-- README-OVERVIEW-IMAGE --> IntegratingTwitterTutorial ========================== A simple application that showcases how to integrate Twitter
-
