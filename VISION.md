@@ -37,7 +37,6 @@ Canonical security policy and reporting:
 
 - [`SECURITY.md`](SECURITY.md)
 
-
 Twitter credentials and user sessions are sensitive. Real keys and tokens must
 remain in local configuration or platform tooling and out of git.
 
