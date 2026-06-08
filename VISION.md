@@ -38,7 +38,7 @@ remain in local configuration or platform tooling and out of git.
 
 Do not add logging that exposes tokens, account IDs, or private timeline data.
 
-## What We Will Not Merge For Now
+## What We Will Not Merge (For Now)
 
 - Hardcoded Twitter/Fabric credentials
 - Silent account actions
