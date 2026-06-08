@@ -44,3 +44,6 @@ Do not add logging that exposes tokens, account IDs, or private timeline data.
 - Silent account actions
 - Broad dependency migrations without verification notes
 - Generated signing files or local machine paths
+
+This list is a roadmap guardrail, not a permanent rule.
+Strong user demand and strong technical rationale can change it.
