@@ -78,4 +78,4 @@ Keep changes small and tied to the project that is already present in this repos
 
 Prior README summary:
 
-> FabricWithTwitter <!-- README-OVERVIEW-IMAGE --> IntegratingTwitterTutorial ========================== A simple application that showcases how to integrate Twitter
+> FabricWithTwitter IntegratingTwitterTutorial ========================== A simple application that showcases how to integrate Twitter
