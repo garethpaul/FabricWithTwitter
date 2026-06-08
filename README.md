@@ -13,6 +13,7 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 
 - `README.md` - project overview and local usage notes
 - `Android` - source or example code
+- `Makefile` and `scripts/check-baseline.sh` - static maintenance checks
 - `iOS` - source or example code
 - `SECURITY.md` - security reporting and disclosure guidance
 - `VISION.md` - project direction and maintenance guardrails
@@ -44,16 +45,36 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 
 - Use Android Studio to open the project or run `gradle assembleDebug` when the Android SDK is configured.
 - Open the Xcode project or workspace in Xcode and run the matching app/sample scheme.
+- Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in local Gradle/Xcode
+  environment settings when exercising Fabric upload behavior. The checked-in
+  iOS build phases skip Fabric upload when those variables are absent.
+- Android manifests keep `com.crashlytics.ApiKey` empty in source; populate
+  real values through local Fabric tooling or local build configuration only.
 
 ## Testing and Verification
 
-- Xcode's test action or `xcodebuild test` with the appropriate scheme and destination
+Run the static maintenance baseline:
+
+```bash
+make check
+```
+
+The baseline verifies that committed iOS Fabric run scripts use local
+environment variables, Android Crashlytics manifest keys remain placeholders,
+local credential files stay ignored, and Xcode project listing is attempted
+when `xcodebuild` is installed.
+
+For functional verification, use Android Studio/Gradle and Xcode's test action
+or `xcodebuild test` with the appropriate scheme and destination.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
 ## Configuration and Secrets
 
 - Detected references to Twitter. Keep API keys, OAuth credentials, tokens, and account-specific values in local configuration only.
+- Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter keys/tokens, Android
+  keystores, signing identities, `.env`, and `.xcconfig` files out of source
+  control.
 
 ## Security and Privacy Notes
 
@@ -67,6 +88,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 ## Maintenance Notes
 
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
+- Run `make check` before pushing changes to Android manifests, Xcode project
+  files, Fabric/Twitter integration, or credential handling.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 

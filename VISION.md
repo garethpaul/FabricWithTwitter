@@ -20,6 +20,18 @@ Priority:
 - Avoid committing Twitter keys, Fabric API keys, tokens, or signing material
 - Keep legacy dependency assumptions visible
 
+Current baseline:
+
+- `scripts/check-baseline.sh` verifies that iOS Fabric run scripts read
+  `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
+  of committed identifiers.
+- Android `com.crashlytics.ApiKey` manifest values remain empty placeholders in
+  source control.
+- Local `.env`, `.xcconfig`, keystore, and Fabric-generated credential files are
+  ignored.
+- Xcode project listing is attempted when `xcodebuild` is installed; otherwise
+  static checks remain the minimum verification path.
+
 Next priorities:
 
 - Add clearer build and verification notes for each sample app
