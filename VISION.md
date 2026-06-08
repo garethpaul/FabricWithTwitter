@@ -1,5 +1,8 @@
 ## Fabric With Twitter Vision
 
+This document explains the current state and direction of the project.
+Project overview and developer docs: [`README.md`](README.md)
+
 Fabric With Twitter is a simple sample for integrating Fabric with Twitter.
 
 The repository is useful as a historical TwitterKit/Fabric integration example,
