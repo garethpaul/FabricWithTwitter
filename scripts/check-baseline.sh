@@ -11,6 +11,7 @@ IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-r
 WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guard.md"
 WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
+ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -48,6 +49,7 @@ for path in \
   "docs/plans/2026-06-09-wear-login-button-guard.md" \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
+  "docs/plans/2026-06-09-android-backup-opt-out.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
@@ -77,6 +79,21 @@ if grep -R -E 'com\.crashlytics\.ApiKey" android:value="[A-Za-z0-9_./+-]{6,}"' "
   printf '%s\n' "Android Crashlytics API keys must remain placeholders in source." >&2
   exit 1
 fi
+
+if grep -R -F 'android:allowBackup="true"' "$ROOT_DIR/Android" --include='AndroidManifest.xml'; then
+  printf '%s\n' "Android sample manifests must not opt into app-data backup by default." >&2
+  exit 1
+fi
+
+for manifest in \
+  "$ROOT_DIR/Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
+  "$ROOT_DIR/Android/WearExample/mobile/src/main/AndroidManifest.xml" \
+  "$ROOT_DIR/Android/WearExample/wear/src/main/AndroidManifest.xml"; do
+  if ! grep -Fq 'android:allowBackup="false"' "$manifest"; then
+    printf '%s\n' "$manifest must explicitly disable app-data backup." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq "*.xcconfig" "$ROOT_DIR/.gitignore" ||
@@ -261,6 +278,16 @@ fi
 
 if ! grep -Fq "make check" "$WEAR_NOTIFICATION_VIEW_PLAN"; then
   printf '%s\n' "Wear notification text view guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$ANDROID_BACKUP_PLAN"; then
+  printf '%s\n' "Android backup opt-out plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$ANDROID_BACKUP_PLAN"; then
+  printf '%s\n' "Android backup opt-out plan must record make check verification." >&2
   exit 1
 fi
 

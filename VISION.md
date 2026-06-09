@@ -27,6 +27,8 @@ Current baseline:
   of committed identifiers.
 - Android `com.crashlytics.ApiKey` manifest values remain empty placeholders in
   source control.
+- Android display, mobile, and wear samples opt out of platform app-data backup
+  by default.
 - Android and iOS display samples use generic Twitter diagnostics instead of
   logging raw tweet objects or raw errors.
 - The iOS TableView sample resets its in-flight tweet-load flag on guest-login
@@ -59,6 +61,7 @@ Contribution rules:
 - One PR = one focused auth, build, sample, or documentation change.
 - Do not mix SDK migration with UI or behavior changes unless required.
 - Keep credential placeholders empty in committed source.
+- Preserve Android backup opt-out when changing sample manifests.
 - Preserve Wear mobile login button lifecycle guards when changing the legacy
   Twitter login flow.
 - Verify Twitter login/display behavior with local credentials when changing it.

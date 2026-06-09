@@ -112,6 +112,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make check` before pushing changes to Android manifests, Xcode project
   files, Fabric/Twitter integration, or credential handling.
+- Android display, mobile, and wear samples keep `android:allowBackup="false"`
+  so app data is not opted into platform backup by default.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-wear-tweet-payload-guard.md` for the Wear tweet
@@ -120,6 +122,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   Twitter login button lifecycle guard.
 - See `docs/plans/2026-06-09-wear-notification-text-view-guard.md` for the Wear
   notification display target guard.
+- See `docs/plans/2026-06-09-android-backup-opt-out.md` for the Android backup
+  opt-out guard.
 
 ## Contributing
 

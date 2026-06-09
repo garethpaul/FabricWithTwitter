@@ -2,6 +2,9 @@
 
 ## 2026-06-09
 
+- Disabled Android app-data backups for the display, mobile, and wear samples
+  so legacy Twitter/Fabric app state is not opted into device backup by
+  default.
 - Guarded the Android Wear notification display when the tweet text view target
   is missing.
 - Guarded the Android Wear mobile Twitter login button setup and activity-result
