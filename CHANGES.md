@@ -5,6 +5,8 @@
 - Reset the iOS TableView tweet-loading in-flight flag on guest-login failure
   and tweet-load completion, and exposed `make lint`/`make test`/`make build`
   baseline aliases.
+- Guarded Wear tweet loading so missing, empty, or whitespace-only tweet text
+  is not sent to the watch sample or displayed in watch notifications.
 - Removed raw Wear message path values from listener diagnostics and added a
   static baseline guard.
 - Encoded Wear tweet messages as UTF-8 on the mobile sender to match listener

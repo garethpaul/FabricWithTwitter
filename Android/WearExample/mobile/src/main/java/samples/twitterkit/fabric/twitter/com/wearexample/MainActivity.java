@@ -59,20 +59,26 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
         loginButton = (TwitterLoginButton)
                 findViewById(R.id.login_button);
-        loginButton.setCallback(new Callback<TwitterSession>() {
-            @Override
-            public void success(Result<TwitterSession> result) {
-                // Do something with result, which provides a
-                // TwitterSession for making API calls
-                loadTweets();
-                loginButton.setVisibility(View.INVISIBLE);
-            }
+        if (loginButton != null) {
+            loginButton.setCallback(new Callback<TwitterSession>() {
+                @Override
+                public void success(Result<TwitterSession> result) {
+                    // Do something with result, which provides a
+                    // TwitterSession for making API calls
+                    loadTweets();
+                    if (loginButton != null) {
+                        loginButton.setVisibility(View.INVISIBLE);
+                    }
+                }
 
-            @Override
-            public void failure(TwitterException exception) {
-                // Do something on failure
-            }
-        });
+                @Override
+                public void failure(TwitterException exception) {
+                    Log.d(TAG, "Twitter login failed");
+                }
+            });
+        } else {
+            Log.w(TAG, "Twitter login button not found");
+        }
 
         // Setup WearablesClient
         setupClient();
@@ -84,7 +90,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         TweetUtils.loadTweet(tweetId, new LoadCallback<Tweet>() {
             @Override
             public void success(Tweet tweet) {
-                sendMessage(PATH, tweet.text);
+                if (tweet == null || tweet.text == null || tweet.text.trim().length() == 0) {
+                    Log.d(TAG, "Skipping wear message without tweet text");
+                    return;
+                }
+                sendMessage(PATH, tweet.text.trim());
                 final RelativeLayout myLayout
                         = (RelativeLayout) findViewById(R.id.tweet_view);
                 myLayout.addView(new TweetView(
@@ -117,6 +127,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             Log.d(TAG, "Skipping wear message without path, tweet, or client");
             return;
         }
+        final String safeTweetText = tweetText.trim();
+        if (safeTweetText.length() == 0) {
+            Log.d(TAG, "Skipping wear message without tweet text");
+            return;
+        }
 
         new Thread(new Runnable() {
             @Override
@@ -129,7 +144,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(messageClient).await();
                 for (Node node : nodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                            messageClient, node.getId(), path, tweetText.getBytes(UTF_8)).await();
+                            messageClient, node.getId(), path, safeTweetText.getBytes(UTF_8)).await();
                 }
             }
         }).start();
@@ -172,7 +187,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        loginButton.onActivityResult(requestCode, resultCode, data);
+        if (loginButton != null) {
+            loginButton.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
 

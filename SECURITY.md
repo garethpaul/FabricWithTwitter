@@ -27,6 +27,8 @@ Helpful reports include:
 - This repository appears to be an Android mobile application or sample. The active security scope is the code and documentation on the default branch.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
+- Wear tweet loading should skip missing, empty, or whitespace-only tweet text
+  before sending messages to the watch sample or displaying notifications.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.

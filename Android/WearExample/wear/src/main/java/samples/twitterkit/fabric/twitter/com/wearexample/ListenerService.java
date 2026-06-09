@@ -51,7 +51,12 @@ public class ListenerService extends WearableListenerService {
 
         // Build intent for notification content
         Intent viewIntent = new Intent(this, NotificationActivity.class);
-        String tweet = new String(messageData, UTF_8);
+        String tweet = new String(messageData, UTF_8).trim();
+        if (tweet.length() == 0) {
+            Log.e(TAG, "Ignoring wear message without tweet text");
+            return;
+        }
+
         viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet);
         PendingIntent viewPendingIntent =
                 PendingIntent.getActivity(this, 0, viewIntent, 0);

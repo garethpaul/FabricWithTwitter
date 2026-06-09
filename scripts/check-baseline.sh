@@ -8,6 +8,8 @@ WEAR_SENDER_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-utf8-send
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
 IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md"
+WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guard.md"
+WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -42,9 +44,11 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
+  "docs/plans/2026-06-09-wear-login-button-guard.md" \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
+  "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
@@ -86,11 +90,26 @@ if ! grep -Fq "https://dl.google.com/dl/android/maven2" "$WEAR_BUILD"; then
 fi
 
 if ! grep -Fq "path == null || tweetText == null || messageClient == null" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "tweet == null || tweet.text == null || tweet.text.trim().length() == 0" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "Skipping wear message without tweet text" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "final String safeTweetText = tweetText.trim()" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "safeTweetText.length() == 0" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "blockingConnect().isSuccess()" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "client != null && (client.isConnected() || client.isConnecting())" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_MOBILE_ACTIVITY" ||
-  ! grep -Fq "tweetText.getBytes(UTF_8)" "$WEAR_MOBILE_ACTIVITY"; then
+  ! grep -Fq "safeTweetText.getBytes(UTF_8)" "$WEAR_MOBILE_ACTIVITY"; then
   printf '%s\n' "Wear mobile sender must guard missing messages, encode UTF-8 payloads, and disconnect clients safely." >&2
+  exit 1
+fi
+
+wear_result_method=$(sed -n '/protected void onActivityResult/,$p' "$WEAR_MOBILE_ACTIVITY")
+if ! grep -Fq "if (loginButton != null)" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "loginButton.setCallback" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq 'Log.w(TAG, "Twitter login button not found")' "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq 'Log.d(TAG, "Twitter login failed")' "$WEAR_MOBILE_ACTIVITY" ||
+  ! printf '%s\n' "$wear_result_method" | grep -Fq "if (loginButton != null)" ||
+  ! printf '%s\n' "$wear_result_method" | grep -Fq "loginButton.onActivityResult(requestCode, resultCode, data)"; then
+  printf '%s\n' "Wear mobile login button setup and activity-result forwarding must be null-safe." >&2
   exit 1
 fi
 
@@ -98,7 +117,9 @@ if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LI
   ! grep -Fq "Ignoring unexpected wear path" "$WEAR_LISTENER" ||
   ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER" ||
   ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_LISTENER" ||
-  ! grep -Fq "new String(messageData, UTF_8)" "$WEAR_LISTENER"; then
+  ! grep -Fq "new String(messageData, UTF_8).trim()" "$WEAR_LISTENER" ||
+  ! grep -Fq "tweet.length() == 0" "$WEAR_LISTENER" ||
+  ! grep -Fq "Ignoring wear message without tweet text" "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
   exit 1
 fi
@@ -115,7 +136,9 @@ if ! grep -Fq "NotificationActivity.TWEET_KEY" "$WEAR_LISTENER" ||
   exit 1
 fi
 
-if ! grep -Fq "tweet != null && tweet.length() > 0" "$WEAR_NOTIFICATION"; then
+if ! grep -Fq "tweet != null" "$WEAR_NOTIFICATION" ||
+  ! grep -Fq "String safeTweet = tweet.trim()" "$WEAR_NOTIFICATION" ||
+  ! grep -Fq "safeTweet.length() > 0" "$WEAR_NOTIFICATION"; then
   printf '%s\n' "Wear notification activity must guard missing tweet extras." >&2
   exit 1
 fi
@@ -200,6 +223,26 @@ fi
 
 if ! grep -Fq "status: completed" "$IOS_TWEET_LOAD_PLAN"; then
   printf '%s\n' "iOS tweet load in-flight reset plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_TWEET_PAYLOAD_PLAN"; then
+  printf '%s\n' "Wear tweet payload guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$WEAR_TWEET_PAYLOAD_PLAN"; then
+  printf '%s\n' "Wear tweet payload guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_LOGIN_PLAN"; then
+  printf '%s\n' "Wear login button guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$WEAR_LOGIN_PLAN"; then
+  printf '%s\n' "Wear login button guard plan must record make check verification." >&2
   exit 1
 fi
 
