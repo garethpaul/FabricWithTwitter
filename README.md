@@ -63,7 +63,8 @@ The baseline verifies that committed iOS Fabric run scripts use local
 environment variables, Android Crashlytics manifest keys remain placeholders,
 raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
-is skipped before sending and display, Wear mobile login button handling is
+is skipped before sending and display, Wear notification display targets are
+checked before setting tweet text, Wear mobile login button handling is
 null-safe, local credential files stay ignored, and Xcode project listing is
 attempted when `xcodebuild` is installed.
 
@@ -87,6 +88,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
+- Wear notification display verifies that the text view target exists before
+  setting tweet text.
 - The Android Wear mobile sample forwards Twitter login activity results only
   when the login button view was initialized.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
@@ -115,6 +118,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   payload guard.
 - See `docs/plans/2026-06-09-wear-login-button-guard.md` for the Wear mobile
   Twitter login button lifecycle guard.
+- See `docs/plans/2026-06-09-wear-notification-text-view-guard.md` for the Wear
+  notification display target guard.
 
 ## Contributing
 

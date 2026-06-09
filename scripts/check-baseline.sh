@@ -10,6 +10,7 @@ WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-bounda
 IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md"
 WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guard.md"
 WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
+WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -48,6 +49,7 @@ for path in \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
+  "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
@@ -140,6 +142,12 @@ if ! grep -Fq "tweet != null" "$WEAR_NOTIFICATION" ||
   ! grep -Fq "String safeTweet = tweet.trim()" "$WEAR_NOTIFICATION" ||
   ! grep -Fq "safeTweet.length() > 0" "$WEAR_NOTIFICATION"; then
   printf '%s\n' "Wear notification activity must guard missing tweet extras." >&2
+  exit 1
+fi
+
+if ! grep -Fq "if (mTextView == null)" "$WEAR_NOTIFICATION" ||
+  ! grep -Fq 'Log.w(TAG, "Wear notification text view not found")' "$WEAR_NOTIFICATION"; then
+  printf '%s\n' "Wear notification activity must guard missing display targets." >&2
   exit 1
 fi
 
@@ -243,6 +251,16 @@ fi
 
 if ! grep -Fq "make check" "$WEAR_LOGIN_PLAN"; then
   printf '%s\n' "Wear login button guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_NOTIFICATION_VIEW_PLAN"; then
+  printf '%s\n' "Wear notification text view guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$WEAR_NOTIFICATION_VIEW_PLAN"; then
+  printf '%s\n' "Wear notification text view guard plan must record make check verification." >&2
   exit 1
 fi
 

@@ -31,6 +31,8 @@ Helpful reports include:
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - Wear tweet loading should skip missing, empty, or whitespace-only tweet text
   before sending messages to the watch sample or displaying notifications.
+- Wear notification display should stay null-safe when legacy layouts drift or
+  omit the tweet text view target.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.
 - Review found network clients, sockets, web APIs, or service endpoints; changes in those areas should receive security-focused review before merge.
 - Review found mobile permission or privacy-sensitive data handling; changes in those areas should receive security-focused review before merge.

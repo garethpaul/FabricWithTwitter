@@ -17,6 +17,10 @@ public class NotificationActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
         mTextView = (TextView) findViewById(R.id.text_view);
+        if (mTextView == null) {
+            Log.w(TAG, "Wear notification text view not found");
+            return;
+        }
 
         Intent intent = getIntent();
         if (intent != null) {
