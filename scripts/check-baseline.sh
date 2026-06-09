@@ -3,6 +3,7 @@ set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"
+WEAR_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-08-wear-message-utf8-decoding.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
 WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
@@ -32,6 +33,7 @@ for path in \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
@@ -80,7 +82,9 @@ fi
 
 if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LISTENER" ||
   ! grep -Fq "Ignoring unexpected wear path" "$WEAR_LISTENER" ||
-  ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER"; then
+  ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER" ||
+  ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_LISTENER" ||
+  ! grep -Fq "new String(messageData, UTF_8)" "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
   exit 1
 fi
@@ -120,6 +124,11 @@ fi
 
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_CHARSET_PLAN"; then
+  printf '%s\n' "Wear message UTF-8 plan must be marked completed." >&2
   exit 1
 fi
 

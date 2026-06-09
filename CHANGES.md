@@ -4,6 +4,8 @@
 
 - Guarded Wear tweet message sending, notification display, and listener
   cleanup against missing payloads and disconnected clients.
+- Decoded Wear tweet payload bytes with explicit UTF-8 instead of the platform
+  default charset.
 - Added Google Maven to the legacy WearExample project so Wear support and Play
   Services artifacts resolve outside the old local SDK/JCenter paths.
 - Replaced committed iOS Fabric run-script identifiers with local

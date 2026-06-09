@@ -11,11 +11,14 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.nio.charset.Charset;
+
 
 public class ListenerService extends WearableListenerService {
     private static final String TAG = ListenerService.class.getSimpleName();
     private static final String PATH = "/new_tweet";
     private static final int NOTIFICATION_ID = 1;
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private GoogleApiClient client;
 
@@ -48,7 +51,7 @@ public class ListenerService extends WearableListenerService {
 
         // Build intent for notification content
         Intent viewIntent = new Intent(this, NotificationActivity.class);
-        String tweet = new String(messageData);
+        String tweet = new String(messageData, UTF_8);
         viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet);
         PendingIntent viewPendingIntent =
                 PendingIntent.getActivity(this, 0, viewIntent, 0);
