@@ -35,6 +35,8 @@ Current baseline:
   failure and tweet-load completion.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
+- The Android Wear mobile sample verifies that its tweet display container
+  exists before adding a TwitterKit `TweetView`.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that its text view target exists before
@@ -64,6 +66,8 @@ Contribution rules:
 - Preserve Android backup opt-out when changing sample manifests.
 - Preserve Wear mobile login button lifecycle guards when changing the legacy
   Twitter login flow.
+- Preserve Wear mobile tweet display container guards when changing legacy
+  tweet UI layouts.
 - Verify Twitter login/display behavior with local credentials when changing it.
 
 ## Security

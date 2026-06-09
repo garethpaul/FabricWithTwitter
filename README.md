@@ -65,8 +65,9 @@ raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
 is skipped before sending and display, Wear notification display targets are
 checked before setting tweet text, Wear mobile login button handling is
-null-safe, local credential files stay ignored, and Xcode project listing is
-attempted when `xcodebuild` is installed.
+null-safe, Wear mobile tweet display verifies that its container view exists
+before adding a `TweetView`, local credential files stay ignored, and Xcode
+project listing is attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
@@ -92,6 +93,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   setting tweet text.
 - The Android Wear mobile sample forwards Twitter login activity results only
   when the login button view was initialized.
+- The Android Wear mobile sample verifies that the tweet display container
+  exists before adding a TwitterKit `TweetView`.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest
@@ -124,6 +127,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   notification display target guard.
 - See `docs/plans/2026-06-09-android-backup-opt-out.md` for the Android backup
   opt-out guard.
+- See `docs/plans/2026-06-09-wear-tweet-view-container-guard.md` for the Wear
+  mobile tweet display container guard.
 
 ## Contributing
 

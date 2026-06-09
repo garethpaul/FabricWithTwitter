@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Guarded the Android Wear mobile tweet display container before adding
+  TwitterKit tweet views.
 - Disabled Android app-data backups for the display, mobile, and wear samples
   so legacy Twitter/Fabric app state is not opted into device backup by
   default.

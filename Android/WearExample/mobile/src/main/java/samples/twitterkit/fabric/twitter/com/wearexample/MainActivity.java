@@ -95,9 +95,13 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                     return;
                 }
                 sendMessage(PATH, tweet.text.trim());
-                final RelativeLayout myLayout
+                final RelativeLayout tweetContainer
                         = (RelativeLayout) findViewById(R.id.tweet_view);
-                myLayout.addView(new TweetView(
+                if (tweetContainer == null) {
+                    Log.w(TAG, "Tweet display container not found");
+                    return;
+                }
+                tweetContainer.addView(new TweetView(
                         MainActivity.this, tweet));
             }
 

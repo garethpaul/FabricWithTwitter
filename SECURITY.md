@@ -33,6 +33,8 @@ Helpful reports include:
   before sending messages to the watch sample or displaying notifications.
 - Wear notification display should stay null-safe when legacy layouts drift or
   omit the tweet text view target.
+- Wear mobile tweet display should stay null-safe when legacy layouts drift or
+  omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled
   by default because the samples handle Twitter/Fabric app state.
 - Review found external API integrations or credential-adjacent configuration; changes in those areas should receive security-focused review before merge.

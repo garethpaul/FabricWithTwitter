@@ -12,6 +12,7 @@ WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guar
 WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
 ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
+WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -53,6 +54,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
+  "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
@@ -168,6 +170,15 @@ if ! grep -Fq "if (mTextView == null)" "$WEAR_NOTIFICATION" ||
   exit 1
 fi
 
+if ! grep -Fq "final RelativeLayout tweetContainer" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "if (tweetContainer == null)" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq 'Log.w(TAG, "Tweet display container not found")' "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "tweetContainer.addView(new TweetView" "$WEAR_MOBILE_ACTIVITY" ||
+  grep -Fq "myLayout.addView(new TweetView" "$WEAR_MOBILE_ACTIVITY"; then
+  printf '%s\n' "Wear mobile tweet display must guard missing container targets." >&2
+  exit 1
+fi
+
 if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
   ! grep -Fq "test: check" "$ROOT_DIR/Makefile" ||
   ! grep -Fq "build: check" "$ROOT_DIR/Makefile"; then
@@ -202,14 +213,16 @@ fi
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
-  ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md"; then
+  ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "tweet display container" "$ROOT_DIR/README.md"; then
   printf '%s\n' "README must document static verification and local Fabric credentials." >&2
   exit 1
 fi
 
 if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "Android" "$ROOT_DIR/VISION.md" ||
-  ! grep -Fq "Fabric run scripts" "$ROOT_DIR/VISION.md"; then
+  ! grep -Fq "Fabric run scripts" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "tweet display container guards" "$ROOT_DIR/VISION.md"; then
   printf '%s\n' "VISION must describe current Android and iOS credential guardrails." >&2
   exit 1
 fi
@@ -288,6 +301,16 @@ fi
 
 if ! grep -Fq "make check" "$ANDROID_BACKUP_PLAN"; then
   printf '%s\n' "Android backup opt-out plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_TWEET_VIEW_PLAN"; then
+  printf '%s\n' "Wear tweet view container guard plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
+  printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2
   exit 1
 fi
 
