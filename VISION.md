@@ -29,9 +29,13 @@ Current baseline:
   source control.
 - Android and iOS display samples use generic Twitter diagnostics instead of
   logging raw tweet objects or raw errors.
+- The iOS TableView sample resets its in-flight tweet-load flag on guest-login
+  failure and tweet-load completion.
 - Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
   platform default charsets.
 - Wear listener diagnostics do not include raw incoming message paths.
+- `make lint`, `make test`, and `make build` run the static baseline while
+  these legacy samples have no narrower installed gates here.
 - Local `.env`, `.xcconfig`, keystore, and Fabric-generated credential files are
   ignored.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise

@@ -2,6 +2,9 @@
 
 ## 2026-06-09
 
+- Reset the iOS TableView tweet-loading in-flight flag on guest-login failure
+  and tweet-load completion, and exposed `make lint`/`make test`/`make build`
+  baseline aliases.
 - Removed raw Wear message path values from listener diagnostics and added a
   static baseline guard.
 - Encoded Wear tweet messages as UTF-8 on the mobile sender to match listener

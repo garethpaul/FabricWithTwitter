@@ -61,10 +61,16 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
+            if session == nil {
+                self.isLoadingTweets = false
+                println("Twitter guest login failed")
+                return
+            }
 
             // Find the tweets with the tweetIDs
             Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
                 (twttrs, error) -> Void in
+                self.isLoadingTweets = false
 
                 // If there are tweets do something magical
                 if ((twttrs) != nil) {

@@ -66,6 +66,9 @@ Wear message payloads are encoded and decoded as UTF-8, local credential files
 stay ignored, and Xcode project listing is attempted when `xcodebuild` is
 installed.
 
+The `make lint`, `make test`, and `make build` aliases run the same static
+baseline while these legacy samples have no narrower installed gates here.
+
 For functional verification, use Android Studio/Gradle and Xcode's test action
 or `xcodebuild test` with the appropriate scheme and destination.
 
@@ -83,6 +86,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   generic.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
+- The iOS TableView sample clears its tweet-loading in-flight flag after guest
+  login failure or tweet-load completion so refreshes are not permanently
+  blocked.
 
 ## Security and Privacy Notes
 

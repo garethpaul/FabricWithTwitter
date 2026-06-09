@@ -7,6 +7,7 @@ WEAR_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-08-wear-message-utf8-decoding.md
 WEAR_SENDER_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-utf8-sender.md"
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
+IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -40,6 +41,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
@@ -118,6 +120,13 @@ if ! grep -Fq "tweet != null && tweet.length() > 0" "$WEAR_NOTIFICATION"; then
   exit 1
 fi
 
+if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
+  ! grep -Fq "test: check" "$ROOT_DIR/Makefile" ||
+  ! grep -Fq "build: check" "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile must expose lint, test, and build gates." >&2
+  exit 1
+fi
+
 if grep -Fq "tweet.toString()" "$DISPLAY_ACTIVITY" ||
   grep -Fq "exception.getMessage()" "$DISPLAY_ACTIVITY" ||
   grep -Fq 'Log.v("tweet"' "$DISPLAY_ACTIVITY" ||
@@ -132,6 +141,14 @@ if ! grep -Fq "private static final String TAG = MainActivity.class.getSimpleNam
   ! grep -Fq 'Log.v(TAG, "Tweet load failed")' "$DISPLAY_ACTIVITY" ||
   ! grep -Fq 'println("Twitter tweet load failed")' "$IOS_TABLE_VIEW"; then
   printf '%s\n' "Twitter display samples must use generic log messages." >&2
+  exit 1
+fi
+
+ios_loading_reset_count=$(grep -F "self.isLoadingTweets = false" "$IOS_TABLE_VIEW" | wc -l | tr -d ' ')
+if ! grep -Fq "if session == nil" "$IOS_TABLE_VIEW" ||
+  ! grep -Fq 'println("Twitter guest login failed")' "$IOS_TABLE_VIEW" ||
+  [ "$ios_loading_reset_count" -lt 2 ]; then
+  printf '%s\n' "iOS tweet loading must reset in-flight state on guest-login failure and tweet-load completion." >&2
   exit 1
 fi
 
@@ -178,6 +195,11 @@ fi
 
 if ! grep -Fq "status: completed" "$WEAR_PATH_LOG_PLAN"; then
   printf '%s\n' "Wear message path log boundary plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$IOS_TWEET_LOAD_PLAN"; then
+  printf '%s\n' "iOS tweet load in-flight reset plan must be marked completed." >&2
   exit 1
 fi
 
