@@ -4,6 +4,7 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"
 WEAR_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-08-wear-message-utf8-decoding.md"
+WEAR_SENDER_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-utf8-sender.md"
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
@@ -39,6 +40,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
@@ -83,8 +85,10 @@ fi
 
 if ! grep -Fq "path == null || tweetText == null || messageClient == null" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "blockingConnect().isSuccess()" "$WEAR_MOBILE_ACTIVITY" ||
-  ! grep -Fq "client != null && (client.isConnected() || client.isConnecting())" "$WEAR_MOBILE_ACTIVITY"; then
-  printf '%s\n' "Wear mobile sender must guard missing messages and disconnect clients safely." >&2
+  ! grep -Fq "client != null && (client.isConnected() || client.isConnecting())" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "tweetText.getBytes(UTF_8)" "$WEAR_MOBILE_ACTIVITY"; then
+  printf '%s\n' "Wear mobile sender must guard missing messages, encode UTF-8 payloads, and disconnect clients safely." >&2
   exit 1
 fi
 
@@ -159,6 +163,11 @@ fi
 
 if ! grep -Fq "status: completed" "$WEAR_CHARSET_PLAN"; then
   printf '%s\n' "Wear message UTF-8 plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_SENDER_CHARSET_PLAN"; then
+  printf '%s\n' "Wear message UTF-8 sender plan must be marked completed." >&2
   exit 1
 fi
 

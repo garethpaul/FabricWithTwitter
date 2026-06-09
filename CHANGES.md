@@ -4,6 +4,8 @@
 
 - Removed raw Wear message path values from listener diagnostics and added a
   static baseline guard.
+- Encoded Wear tweet messages as UTF-8 on the mobile sender to match listener
+  decoding.
 - Replaced raw Android tweet object and Twitter exception logs with generic
   display diagnostics.
 - Replaced iOS raw tweet-load error printing with a generic message.

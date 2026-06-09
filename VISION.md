@@ -29,6 +29,8 @@ Current baseline:
   source control.
 - Android and iOS display samples use generic Twitter diagnostics instead of
   logging raw tweet objects or raw errors.
+- Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
+  platform default charsets.
 - Wear listener diagnostics do not include raw incoming message paths.
 - Local `.env`, `.xcconfig`, keystore, and Fabric-generated credential files are
   ignored.

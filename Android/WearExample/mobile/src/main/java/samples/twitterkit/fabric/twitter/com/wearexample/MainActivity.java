@@ -16,6 +16,8 @@ import com.google.android.gms.wearable.Wearable;
 import android.content.Intent;
 import android.widget.RelativeLayout;
 
+import java.nio.charset.Charset;
+
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -40,6 +42,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TWITTER_KEY = "";
     private static final String TWITTER_SECRET = "";
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
 
     @Override
@@ -126,7 +129,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(messageClient).await();
                 for (Node node : nodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                            messageClient, node.getId(), path, tweetText.getBytes()).await();
+                            messageClient, node.getId(), path, tweetText.getBytes(UTF_8)).await();
                 }
             }
         }).start();
