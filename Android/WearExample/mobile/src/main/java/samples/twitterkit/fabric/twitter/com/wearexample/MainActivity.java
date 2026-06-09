@@ -109,13 +109,24 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
 
     private void sendMessage( final String path, final String tweetText ) {
+        final GoogleApiClient messageClient = client;
+        if (path == null || tweetText == null || messageClient == null) {
+            Log.d(TAG, "Skipping wear message without path, tweet, or client");
+            return;
+        }
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(client).await();
+                if (!messageClient.isConnected() && !messageClient.blockingConnect().isSuccess()) {
+                    Log.d(TAG, "Skipping wear message without connected client");
+                    return;
+                }
+
+                NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(messageClient).await();
                 for (Node node : nodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                            client, node.getId(), path, tweetText.getBytes()).await();
+                            messageClient, node.getId(), path, tweetText.getBytes()).await();
                 }
             }
         }).start();
@@ -125,7 +136,9 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        client.disconnect();
+        if (client != null && (client.isConnected() || client.isConnecting())) {
+            client.disconnect();
+        }
     }
 
 

@@ -21,8 +21,10 @@ public class NotificationActivity extends Activity {
         Intent intent = getIntent();
         if (intent != null) {
             // Push Tweet to TextView
-            mTextView.setText(intent.getStringExtra(TWEET_KEY));
+            String tweet = intent.getStringExtra(TWEET_KEY);
+            if (tweet != null && tweet.length() > 0) {
+                mTextView.setText(tweet);
+            }
         }
     }
 }
-

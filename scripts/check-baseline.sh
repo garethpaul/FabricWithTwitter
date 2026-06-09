@@ -3,6 +3,10 @@ set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"
+WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
+WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
+WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
+WEAR_NOTIFICATION="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java"
 
 require_file() {
   path=$1
@@ -20,8 +24,12 @@ for path in \
   "SECURITY.md" \
   "VISION.md" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
+  "Android/WearExample/build.gradle" \
   "Android/WearExample/mobile/src/main/AndroidManifest.xml" \
+  "Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java" \
   "Android/WearExample/wear/src/main/AndroidManifest.xml" \
+  "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
+  "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
@@ -55,6 +63,37 @@ if ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq "*.keystore" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq "crashlytics.properties" "$ROOT_DIR/.gitignore"; then
   printf '%s\n' "Local credential and signing files must stay ignored." >&2
+  exit 1
+fi
+
+if ! grep -Fq "https://dl.google.com/dl/android/maven2" "$WEAR_BUILD"; then
+  printf '%s\n' "WearExample build must include Google Maven for legacy wearable artifacts." >&2
+  exit 1
+fi
+
+if ! grep -Fq "path == null || tweetText == null || messageClient == null" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "blockingConnect().isSuccess()" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "client != null && (client.isConnected() || client.isConnecting())" "$WEAR_MOBILE_ACTIVITY"; then
+  printf '%s\n' "Wear mobile sender must guard missing messages and disconnect clients safely." >&2
+  exit 1
+fi
+
+if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LISTENER" ||
+  ! grep -Fq "Ignoring unexpected wear path" "$WEAR_LISTENER" ||
+  ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
+  exit 1
+fi
+
+if ! grep -Fq "NotificationActivity.TWEET_KEY" "$WEAR_LISTENER" ||
+  ! grep -Fq "removeListener(client, this)" "$WEAR_LISTENER" ||
+  ! grep -Fq "client.disconnect()" "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear listener must use shared extras and release its GoogleApiClient listener." >&2
+  exit 1
+fi
+
+if ! grep -Fq "tweet != null && tweet.length() > 0" "$WEAR_NOTIFICATION"; then
+  printf '%s\n' "Wear notification activity must guard missing tweet extras." >&2
   exit 1
 fi
 
