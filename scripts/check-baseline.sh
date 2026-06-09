@@ -5,6 +5,7 @@ ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"
 WEAR_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-08-wear-message-utf8-decoding.md"
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
+WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -38,6 +39,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
@@ -92,6 +94,11 @@ if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LI
   ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_LISTENER" ||
   ! grep -Fq "new String(messageData, UTF_8)" "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
+  exit 1
+fi
+
+if grep -Eq 'Log\.[a-z]+\([^;]*messageEvent\.getPath\(\)' "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear listener must not log raw incoming message paths." >&2
   exit 1
 fi
 
@@ -157,6 +164,11 @@ fi
 
 if ! grep -Fq "status: completed" "$TWITTER_LOG_PLAN"; then
   printf '%s\n' "Twitter display log boundary plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$WEAR_PATH_LOG_PLAN"; then
+  printf '%s\n' "Wear message path log boundary plan must be marked completed." >&2
   exit 1
 fi
 

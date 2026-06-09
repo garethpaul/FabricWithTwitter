@@ -29,6 +29,7 @@ Current baseline:
   source control.
 - Android and iOS display samples use generic Twitter diagnostics instead of
   logging raw tweet objects or raw errors.
+- Wear listener diagnostics do not include raw incoming message paths.
 - Local `.env`, `.xcconfig`, keystore, and Fabric-generated credential files are
   ignored.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise

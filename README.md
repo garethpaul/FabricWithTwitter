@@ -61,8 +61,9 @@ make check
 
 The baseline verifies that committed iOS Fabric run scripts use local
 environment variables, Android Crashlytics manifest keys remain placeholders,
-raw tweet/error display logs are avoided, local credential files stay ignored,
-and Xcode project listing is attempted when `xcodebuild` is installed.
+raw tweet/error display logs are avoided, Wear message paths are not logged,
+local credential files stay ignored, and Xcode project listing is attempted
+when `xcodebuild` is installed.
 
 For functional verification, use Android Studio/Gradle and Xcode's test action
 or `xcodebuild test` with the appropriate scheme and destination.
@@ -77,6 +78,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   control.
 - Do not log raw tweet objects, Twitter exception messages, or account-specific
   display data from sample apps.
+- Do not log raw Wear message paths or payloads; keep cross-device diagnostics
+  generic.
 
 ## Security and Privacy Notes
 

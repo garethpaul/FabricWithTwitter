@@ -39,7 +39,7 @@ public class ListenerService extends WearableListenerService {
             return;
         }
         if (!PATH.equals(messageEvent.getPath())) {
-            Log.d(TAG, "Ignoring unexpected wear path: " + messageEvent.getPath());
+            Log.d(TAG, "Ignoring unexpected wear path");
             return;
         }
 

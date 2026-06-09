@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Removed raw Wear message path values from listener diagnostics and added a
+  static baseline guard.
 - Replaced raw Android tweet object and Twitter exception logs with generic
   display diagnostics.
 - Replaced iOS raw tweet-load error printing with a generic message.
