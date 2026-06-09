@@ -63,8 +63,9 @@ The baseline verifies that committed iOS Fabric run scripts use local
 environment variables, Android Crashlytics manifest keys remain placeholders,
 raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
-is skipped before sending and display, local credential files stay ignored, and
-Xcode project listing is attempted when `xcodebuild` is installed.
+is skipped before sending and display, Wear mobile login button handling is
+null-safe, local credential files stay ignored, and Xcode project listing is
+attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
@@ -86,6 +87,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
+- The Android Wear mobile sample forwards Twitter login activity results only
+  when the login button view was initialized.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest
@@ -110,6 +113,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-wear-tweet-payload-guard.md` for the Wear tweet
   payload guard.
+- See `docs/plans/2026-06-09-wear-login-button-guard.md` for the Wear mobile
+  Twitter login button lifecycle guard.
 
 ## Contributing
 

@@ -2,6 +2,8 @@
 
 ## 2026-06-09
 
+- Guarded the Android Wear mobile Twitter login button setup and activity-result
+  forwarding paths when the login view is missing.
 - Reset the iOS TableView tweet-loading in-flight flag on guest-login failure
   and tweet-load completion, and exposed `make lint`/`make test`/`make build`
   baseline aliases.

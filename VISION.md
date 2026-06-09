@@ -31,6 +31,8 @@ Current baseline:
   logging raw tweet objects or raw errors.
 - The iOS TableView sample resets its in-flight tweet-load flag on guest-login
   failure and tweet-load completion.
+- The Android Wear mobile sample guards Twitter login button setup and
+  activity-result forwarding when legacy layouts drift.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
@@ -55,6 +57,8 @@ Contribution rules:
 - One PR = one focused auth, build, sample, or documentation change.
 - Do not mix SDK migration with UI or behavior changes unless required.
 - Keep credential placeholders empty in committed source.
+- Preserve Wear mobile login button lifecycle guards when changing the legacy
+  Twitter login flow.
 - Verify Twitter login/display behavior with local credentials when changing it.
 
 ## Security
