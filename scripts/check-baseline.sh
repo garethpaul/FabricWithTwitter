@@ -4,10 +4,13 @@ set -eu
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PLAN="$ROOT_DIR/docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"
 WEAR_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-08-wear-message-utf8-decoding.md"
+TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
+DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
 WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
 WEAR_NOTIFICATION="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java"
+IOS_TABLE_VIEW="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift"
 
 require_file() {
   path=$1
@@ -25,6 +28,7 @@ for path in \
   "SECURITY.md" \
   "VISION.md" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
+  "Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java" \
   "Android/WearExample/build.gradle" \
   "Android/WearExample/mobile/src/main/AndroidManifest.xml" \
   "Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java" \
@@ -32,7 +36,9 @@ for path in \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
+  "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
@@ -101,6 +107,23 @@ if ! grep -Fq "tweet != null && tweet.length() > 0" "$WEAR_NOTIFICATION"; then
   exit 1
 fi
 
+if grep -Fq "tweet.toString()" "$DISPLAY_ACTIVITY" ||
+  grep -Fq "exception.getMessage()" "$DISPLAY_ACTIVITY" ||
+  grep -Fq 'Log.v("tweet"' "$DISPLAY_ACTIVITY" ||
+  grep -Fq 'Log.v("hi"' "$DISPLAY_ACTIVITY" ||
+  grep -Fq "println(error)" "$IOS_TABLE_VIEW"; then
+  printf '%s\n' "Twitter display samples must not log raw tweets or raw Twitter errors." >&2
+  exit 1
+fi
+
+if ! grep -Fq "private static final String TAG = MainActivity.class.getSimpleName()" "$DISPLAY_ACTIVITY" ||
+  ! grep -Fq 'Log.v(TAG, "Loaded tweet for display")' "$DISPLAY_ACTIVITY" ||
+  ! grep -Fq 'Log.v(TAG, "Tweet load failed")' "$DISPLAY_ACTIVITY" ||
+  ! grep -Fq 'println("Twitter tweet load failed")' "$IOS_TABLE_VIEW"; then
+  printf '%s\n' "Twitter display samples must use generic log messages." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md"; then
@@ -129,6 +152,11 @@ fi
 
 if ! grep -Fq "status: completed" "$WEAR_CHARSET_PLAN"; then
   printf '%s\n' "Wear message UTF-8 plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$TWITTER_LOG_PLAN"; then
+  printf '%s\n' "Twitter display log boundary plan must be marked completed." >&2
   exit 1
 fi
 

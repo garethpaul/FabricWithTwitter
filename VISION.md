@@ -27,6 +27,8 @@ Current baseline:
   of committed identifiers.
 - Android `com.crashlytics.ApiKey` manifest values remain empty placeholders in
   source control.
+- Android and iOS display samples use generic Twitter diagnostics instead of
+  logging raw tweet objects or raw errors.
 - Local `.env`, `.xcconfig`, keystore, and Fabric-generated credential files are
   ignored.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise

@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-09
+
+- Replaced raw Android tweet object and Twitter exception logs with generic
+  display diagnostics.
+- Replaced iOS raw tweet-load error printing with a generic message.
+- Added a static baseline guard and plan for the display log boundary.
+
 ## 2026-06-08
 
 - Guarded Wear tweet message sending, notification display, and listener

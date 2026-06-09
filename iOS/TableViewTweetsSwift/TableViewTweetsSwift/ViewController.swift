@@ -75,7 +75,7 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
                         self.tweets.append(i as TWTRTweet)
                     }
                 } else {
-                    println(error)
+                    println("Twitter tweet load failed")
                 }
 
             }
@@ -132,4 +132,3 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
         }
     }
 }
-

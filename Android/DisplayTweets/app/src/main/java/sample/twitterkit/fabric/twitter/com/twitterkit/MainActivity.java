@@ -24,6 +24,7 @@ import io.fabric.sdk.android.Fabric;
 public class MainActivity extends Activity {
 
     // Note: Your consumer key/TWITTER_KEY and secret/TWITTER_SECRET should be obfuscated in your source code before shipping.
+    private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TWITTER_KEY = "";
     private static final String TWITTER_SECRET = "";
 
@@ -47,14 +48,14 @@ public class MainActivity extends Activity {
             @Override
             public void success(List<Tweet> tweets) {
                 for (Tweet tweet : tweets) {
-                    Log.v("tweet", tweet.toString());
+                    Log.v(TAG, "Loaded tweet for display");
                     myLayout.addView(new CompactTweetView(MainActivity.this, tweet));
                 }
             }
 
             @Override
             public void failure(TwitterException exception) {
-                Log.v("hi", exception.getMessage());
+                Log.v(TAG, "Tweet load failed");
             }
         });
     }
