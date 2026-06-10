@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-10
+
+- Added a bounded, least-privilege macOS GitHub Actions workflow that runs
+  `make check` and parses both Xcode projects.
+- Extended the baseline checker and docs to require the hosted CI verification
+  path.
+
 ## 2026-06-09
 
 - Guarded the Android Wear mobile tweet display container before adding

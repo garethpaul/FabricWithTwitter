@@ -71,6 +71,8 @@ project listing is attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
+GitHub Actions runs this same `make check` baseline on macOS for pushes and
+pull requests, including Xcode project parsing without requiring credentials.
 
 For functional verification, use Android Studio/Gradle and Xcode's test action
 or `xcodebuild test` with the appropriate scheme and destination.
@@ -129,6 +131,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   opt-out guard.
 - See `docs/plans/2026-06-09-wear-tweet-view-container-guard.md` for the Wear
   mobile tweet display container guard.
+- See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
+  baseline.
 
 ## Contributing
 

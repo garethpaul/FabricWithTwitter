@@ -13,6 +13,8 @@ WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
 ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
+CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
+CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -30,6 +32,7 @@ require_file() {
 
 for path in \
   ".gitignore" \
+  ".github/workflows/check.yml" \
   "CHANGES.md" \
   "Makefile" \
   "README.md" \
@@ -52,6 +55,7 @@ for path in \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
   "docs/plans/2026-06-09-android-backup-opt-out.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
+  "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -212,6 +216,7 @@ if ! grep -Fq "if session == nil" "$IOS_TABLE_VIEW" ||
 fi
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_BUILD_SECRET" "$ROOT_DIR/README.md" ||
   ! grep -Fq "tweet display container" "$ROOT_DIR/README.md"; then
@@ -220,6 +225,7 @@ if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
 fi
 
 if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "Android" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "Fabric run scripts" "$ROOT_DIR/VISION.md" ||
   ! grep -Fq "tweet display container guards" "$ROOT_DIR/VISION.md"; then
@@ -232,6 +238,25 @@ if command -v xcodebuild >/dev/null 2>&1; then
   xcodebuild -list -project "$ROOT_DIR/iOS/WatchSample/WatchSample.xcodeproj" >/dev/null
 else
   printf '%s\n' "Skipping xcodebuild project listing: xcodebuild is not installed."
+fi
+
+if ! grep -Fq "workflow_dispatch:" "$CI_WORKFLOW" ||
+  ! grep -Fq "contents: read" "$CI_WORKFLOW" ||
+  ! grep -Fq "cancel-in-progress: true" "$CI_WORKFLOW" ||
+  ! grep -Fq "runs-on: macos-15" "$CI_WORKFLOW" ||
+  ! grep -Fq "timeout-minutes: 10" "$CI_WORKFLOW" ||
+  ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_WORKFLOW" ||
+  ! grep -Fq "run: make check" "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions workflow must keep the bounded, least-privilege macOS check contract." >&2
+  exit 1
+fi
+
+if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "make check" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "GitHub Actions" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "docs/plans/2026-06-10-ci-baseline.md" "$ROOT_DIR/README.md"; then
+  printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
+  exit 1
 fi
 
 if ! grep -Fq "status: completed" "$PLAN"; then
@@ -309,8 +334,18 @@ if ! grep -Fq "status: completed" "$WEAR_TWEET_VIEW_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "status: completed" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must be marked completed." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
   printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "make check" "$CI_PLAN"; then
+  printf '%s\n' "CI baseline plan must record make check verification." >&2
   exit 1
 fi
 
