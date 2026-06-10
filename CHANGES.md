@@ -2,6 +2,8 @@
 
 ## 2026-06-10
 
+- Type-checked iOS TwitterKit response objects before replacing visible table
+  contents, avoiding force-cast crashes and duplicate stale rows.
 - Added a bounded, least-privilege macOS GitHub Actions workflow that runs
   `make check` and parses both Xcode projects.
 - Extended the baseline checker and docs to require the hosted CI verification

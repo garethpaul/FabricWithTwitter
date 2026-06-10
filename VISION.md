@@ -34,6 +34,8 @@ Current baseline:
   logging raw tweet objects or raw errors.
 - The iOS TableView sample resets its in-flight tweet-load flag on guest-login
   failure and tweet-load completion.
+- The iOS TableView sample type-checks loaded TwitterKit objects before
+  replacing visible rows.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container

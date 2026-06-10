@@ -29,6 +29,8 @@ Helpful reports include:
 - Wear mobile Twitter login button setup and activity-result forwarding should
   stay null-safe when legacy layouts drift.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
+- iOS loaded TwitterKit response objects should be type-checked before they
+  replace visible table contents.
 - Wear tweet loading should skip missing, empty, or whitespace-only tweet text
   before sending messages to the watch sample or displaying notifications.
 - Wear notification display should stay null-safe when legacy layouts drift or

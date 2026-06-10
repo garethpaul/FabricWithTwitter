@@ -73,13 +73,14 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
                 self.isLoadingTweets = false
 
                 // If there are tweets do something magical
-                if ((twttrs) != nil) {
-
-                    // Loop through tweets and do something
-                    for i in twttrs {
-                        // Append the Tweet to the Tweets to display in the table view.
-                        self.tweets.append(i as TWTRTweet)
+                if let loadedTweetObjects = twttrs {
+                    var loadedTweets: [TWTRTweet] = []
+                    for i in loadedTweetObjects {
+                        if let tweet = i as? TWTRTweet {
+                            loadedTweets.append(tweet)
+                        }
                     }
+                    self.tweets = loadedTweets
                 } else {
                     println("Twitter tweet load failed")
                 }

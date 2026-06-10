@@ -102,6 +102,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest
   login failure or tweet-load completion so refreshes are not permanently
   blocked.
+- The iOS TableView sample type-checks loaded TwitterKit objects and replaces
+  visible rows atomically so malformed responses cannot crash or duplicate rows.
 
 ## Security and Privacy Notes
 

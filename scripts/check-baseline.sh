@@ -8,6 +8,7 @@ WEAR_SENDER_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-utf8-send
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
 IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md"
+IOS_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md"
 WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guard.md"
 WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
@@ -50,6 +51,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
+  "docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md" \
   "docs/plans/2026-06-09-wear-login-button-guard.md" \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
@@ -215,6 +217,14 @@ if ! grep -Fq "if session == nil" "$IOS_TABLE_VIEW" ||
   exit 1
 fi
 
+if ! grep -Fq "if let loadedTweetObjects = twttrs" "$IOS_TABLE_VIEW" ||
+  ! grep -Fq "if let tweet = i as? TWTRTweet" "$IOS_TABLE_VIEW" ||
+  ! grep -Fq "self.tweets = loadedTweets" "$IOS_TABLE_VIEW" ||
+  grep -Fq "self.tweets.append(i as TWTRTweet)" "$IOS_TABLE_VIEW"; then
+  printf '%s\n' "iOS loaded tweets must be type-checked before replacing table contents." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
@@ -286,6 +296,11 @@ fi
 
 if ! grep -Fq "status: completed" "$IOS_TWEET_LOAD_PLAN"; then
   printf '%s\n' "iOS tweet load in-flight reset plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$IOS_TWEET_TYPE_PLAN"; then
+  printf '%s\n' "iOS tweet type guard plan must be marked completed." >&2
   exit 1
 fi
 
