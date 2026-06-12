@@ -376,6 +376,13 @@ if ! grep -Fq "status: completed" "$CI_PLAN"; then
   exit 1
 fi
 
+if ! grep -Fq "Status: Completed" "$WEAR_ACTIVITY_PLAN" ||
+  ! grep -Fq "27392063786" "$WEAR_ACTIVITY_PLAN" ||
+  ! grep -Fq "27392064680" "$WEAR_ACTIVITY_PLAN"; then
+  printf '%s\n' "Wear notification activity plan must remain completed with hosted verification recorded." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
   printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2
   exit 1

@@ -1,6 +1,6 @@
 # Wear Notification Activity Boundary
 
-## Status: In Progress
+## Status: Completed
 
 ## Goal
 
@@ -52,3 +52,27 @@ extras.
 The Android projects use an obsolete Gradle/SDK/Fabric stack that is not built
 by current CI. This focused manifest hardening is verified structurally; a full
 SDK migration remains separate work.
+
+## Work Completed
+
+- Set the Wear `NotificationActivity` component to
+  `android:exported="false"`.
+- Removed its `MAIN`/`LAUNCHER` intent filter so it is not implicitly
+  addressable or shown as a standalone launcher target.
+- Preserved the explicit `Intent(this, NotificationActivity.class)` and shared
+  `TWEET_KEY` extra used by the notification `PendingIntent`.
+- Added XML parsing that locates the exact component and rejects export or any
+  nested intent filter.
+- Updated project, security, roadmap, and changelog documentation without
+  changing existing tweet sanitization or Wear message handling.
+
+## Verification Completed
+
+- `make check` passes locally; Xcode listing is skipped because this Linux host
+  does not provide `xcodebuild`.
+- `git diff --check` passes.
+- Restoring `android:exported="true"` makes `make check` fail.
+- Adding an intent filter to `NotificationActivity` makes `make check` fail.
+- GitHub Actions push run `27392063786` passed on `macos-15`.
+- GitHub Actions pull-request run `27392064680` passed on `macos-15`; both runs
+  completed both iOS Xcode project listings.
