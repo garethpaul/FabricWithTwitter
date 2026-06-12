@@ -16,6 +16,7 @@ ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-boundary.md"
+WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service-export-contract.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
@@ -63,6 +64,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-12-wear-notification-activity-boundary.md" \
+  "docs/plans/2026-06-12-wear-listener-service-export-contract.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -125,6 +127,29 @@ if notification.get(android + "exported") != "false":
     raise SystemExit("Wear NotificationActivity must remain non-exported.")
 if notification.findall("intent-filter"):
     raise SystemExit("Wear NotificationActivity must not expose an intent filter.")
+
+services = [
+    service
+    for service in manifest.findall("./application/service")
+    if service.get(android + "name") == ".ListenerService"
+]
+if len(services) != 1:
+    raise SystemExit("Wear ListenerService must remain declared exactly once.")
+
+listener = services[0]
+if listener.get(android + "exported") != "true":
+    raise SystemExit("Wear ListenerService must remain explicitly exported for system binding.")
+
+filters = listener.findall("intent-filter")
+if len(filters) != 1:
+    raise SystemExit("Wear ListenerService must retain exactly one intent filter.")
+
+listener_filter = filters[0]
+actions = [action.get(android + "name") for action in listener_filter.findall("action")]
+if actions != ["com.google.android.gms.wearable.BIND_LISTENER"]:
+    raise SystemExit("Wear ListenerService must expose only the Wear binding action.")
+if listener_filter.findall("category") or listener_filter.findall("data"):
+    raise SystemExit("Wear ListenerService binding filter must not add categories or data selectors.")
 PY
 
 if ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||

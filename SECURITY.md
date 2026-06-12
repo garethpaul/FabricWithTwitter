@@ -38,6 +38,9 @@ Helpful reports include:
 - The Wear notification detail activity should remain non-exported and without
   intent filters so only the app's explicit notification intent can supply
   tweet text.
+- The Wear listener service must remain explicitly exported because Google Play
+  Services binds it for background data-layer delivery. Its manifest filter is
+  limited to the single `com.google.android.gms.wearable.BIND_LISTENER` action.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled

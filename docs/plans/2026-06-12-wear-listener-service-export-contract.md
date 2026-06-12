@@ -1,6 +1,6 @@
 # Wear Listener Service Export Contract
 
-status: planned
+status: implementation complete; hosted verification pending
 
 ## Goal
 
@@ -55,3 +55,22 @@ layer guidance declares manifest-registered listener services with
 - Do not add a launcher or other public filter to `NotificationActivity`.
 - Do not modernize the retired Fabric/TwitterKit or Wear API stack in this
   narrowly scoped security contract.
+
+## Work Completed
+
+- Declared `.ListenerService` with explicit `android:exported="true"` while
+  retaining the exact Wear binding action needed for background delivery.
+- Extended the XML baseline to require one listener declaration, one filter,
+  the exact export value and action, and no categories or data selectors.
+- Documented the intentional system-binding boundary separately from the
+  internal-only notification activity.
+
+## Verification Completed
+
+- `make check`, `make lint`, `make test`, and `make build` passed locally; the
+  host truthfully skipped Xcode project listing because Xcode is unavailable.
+- `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
+- Five focused manifest mutations were rejected: missing export, false export,
+  missing binding action, an extra action, and an additional intent filter.
+- Hosted push, pull-request, and CodeQL verification remains pending for the
+  implementation commit.

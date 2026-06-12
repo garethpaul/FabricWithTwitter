@@ -2,6 +2,9 @@
 
 ## 2026-06-12
 
+- Declared the Wear listener service export explicitly for required Google Play
+  Services binding and constrained its filter to the single Wear binding
+  action through structural baseline checks.
 - Made the Wear notification detail activity internal-only and removed its
   launcher intent filter.
 - Preserved explicit notification `PendingIntent` delivery while preventing
