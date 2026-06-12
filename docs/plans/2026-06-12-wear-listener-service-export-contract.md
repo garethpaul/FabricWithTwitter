@@ -1,0 +1,57 @@
+# Wear Listener Service Export Contract
+
+status: planned
+
+## Goal
+
+Remove the implicit Android service export flagged by CodeQL without breaking
+background Wear data-layer message delivery through Google Play Services.
+
+## Context
+
+`ListenerService` extends `WearableListenerService` and declares the historical
+`com.google.android.gms.wearable.BIND_LISTENER` action. An intent filter makes
+the service implicitly exported on legacy Android targets, while current
+Android manifests require that boundary to be explicit. Android's Wear data
+layer guidance declares manifest-registered listener services with
+`android:exported="true"` so the system can bind and deliver background events.
+
+## Prioritized Engineering Work
+
+1. **Make the required export explicit.** Set `ListenerService` to
+   `android:exported="true"` while retaining the one Wear binding action.
+2. **Enforce the complete manifest contract.** Parse the manifest in the
+   offline baseline and reject missing or false export state, renamed service,
+   missing or additional actions, and extra intent filters.
+3. **Document the boundary.** Explain why this one service remains exported
+   while `NotificationActivity` remains internal-only.
+4. **Verify locally and in hosted analysis.** Run all Make aliases, focused
+   hostile mutations, both canonical workflow events, and CodeQL.
+
+## Requirements
+
+- R1. `.ListenerService` must remain declared exactly once.
+- R2. The service must explicitly set `android:exported="true"` because Google
+  Play Services binds it for background Wear events.
+- R3. The service must expose exactly one intent filter containing exactly the
+  `com.google.android.gms.wearable.BIND_LISTENER` action and no categories or
+  data selectors.
+- R4. `.NotificationActivity` must remain non-exported and filter-free.
+- R5. The change must not add credentials, broaden Android backup, remove Wear
+  message guards, or claim a functional legacy Android build on this host.
+
+## Verification
+
+- `make check`, `make lint`, `make test`, and `make build`.
+- `sh -n scripts/check-baseline.sh` and `git diff --check`.
+- Focused mutations for a missing export, `exported="false"`, a missing action,
+  an additional action, and an additional intent filter.
+- GitHub Actions push and pull-request checks at the same head.
+- CodeQL analysis with the implicit-export alert closed.
+
+## Boundaries
+
+- Do not make the listener private; that would prevent system binding.
+- Do not add a launcher or other public filter to `NotificationActivity`.
+- Do not modernize the retired Fabric/TwitterKit or Wear API stack in this
+  narrowly scoped security contract.
