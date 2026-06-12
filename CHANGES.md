@@ -1,5 +1,12 @@
 # Changes
 
+## 2026-06-12
+
+- Made the Wear notification detail activity internal-only and removed its
+  launcher intent filter.
+- Preserved explicit notification `PendingIntent` delivery while preventing
+  unrelated applications from launching the display with injected tweet text.
+
 ## 2026-06-10
 
 - Type-checked iOS TwitterKit response objects before replacing visible table
