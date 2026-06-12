@@ -11,15 +11,10 @@
         android:theme="@android:style/Theme.DeviceDefault" >
 
         <activity android:name=".NotificationActivity"
-            android:exported="true"
+            android:exported="false"
             android:allowEmbedded="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault.Light">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:theme="@android:style/Theme.DeviceDefault.Light" />
 
         <service android:name=".ListenerService">
             <intent-filter>

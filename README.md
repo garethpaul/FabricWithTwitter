@@ -67,7 +67,8 @@ environment variables, Android Crashlytics manifest keys remain placeholders,
 raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
 is skipped before sending and display, Wear notification display targets are
-checked before setting tweet text, Wear mobile login button handling is
+checked before setting tweet text, the notification detail activity is
+internal-only and has no launcher filter, Wear mobile login button handling is
 null-safe, Wear mobile tweet display verifies that its container view exists
 before adding a `TweetView`, local credential files stay ignored, and Xcode
 project listing is attempted when `xcodebuild` is installed.
