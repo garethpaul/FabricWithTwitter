@@ -15,12 +15,14 @@ WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-t
 ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
+WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-boundary.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
 WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
 WEAR_NOTIFICATION="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java"
+WEAR_MANIFEST="$ROOT_DIR/Android/WearExample/wear/src/main/AndroidManifest.xml"
 IOS_TABLE_VIEW="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift"
 
 require_file() {
@@ -58,6 +60,7 @@ for path in \
   "docs/plans/2026-06-09-android-backup-opt-out.md" \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
+  "docs/plans/2026-06-12-wear-notification-activity-boundary.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -102,6 +105,25 @@ for manifest in \
     exit 1
   fi
 done
+
+python3 - "$WEAR_MANIFEST" <<'PY'
+import sys
+import xml.etree.ElementTree as ET
+
+manifest = ET.parse(sys.argv[1]).getroot()
+android = "{http://schemas.android.com/apk/res/android}"
+activities = manifest.findall("./application/activity")
+notification = next(
+    (activity for activity in activities if activity.get(android + "name") == ".NotificationActivity"),
+    None,
+)
+if notification is None:
+    raise SystemExit("Wear NotificationActivity must remain declared.")
+if notification.get(android + "exported") != "false":
+    raise SystemExit("Wear NotificationActivity must remain non-exported.")
+if notification.findall("intent-filter"):
+    raise SystemExit("Wear NotificationActivity must not expose an intent filter.")
+PY
 
 if ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||
   ! grep -Fq "*.xcconfig" "$ROOT_DIR/.gitignore" ||
@@ -351,6 +373,13 @@ fi
 
 if ! grep -Fq "status: completed" "$CI_PLAN"; then
   printf '%s\n' "CI baseline plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "Status: Completed" "$WEAR_ACTIVITY_PLAN" ||
+  ! grep -Fq "27392063786" "$WEAR_ACTIVITY_PLAN" ||
+  ! grep -Fq "27392064680" "$WEAR_ACTIVITY_PLAN"; then
+  printf '%s\n' "Wear notification activity plan must remain completed with hosted verification recorded." >&2
   exit 1
 fi
 
