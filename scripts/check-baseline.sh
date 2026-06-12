@@ -469,6 +469,30 @@ if ! grep -Fq "Status: Completed" "$WEAR_ACTIVITY_PLAN" ||
   exit 1
 fi
 
+python3 - "$WEAR_LISTENER_EXPORT_PLAN" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+plan = Path(sys.argv[1]).read_text()
+statuses = re.findall(r"^status: .+$", plan, flags=re.MULTILINE)
+verification = plan.split("## Verification Completed\n", 1)[-1]
+required = (
+    "Pull-request run `27408397355` passed",
+    "CodeQL run `27408395236` passed",
+    "`refs/pull/1/head` had zero open code-scanning alerts",
+)
+
+if (
+    statuses != ["status: completed"]
+    or any(item not in verification for item in required)
+    or re.search(r"\b(?:pending|todo|tbd|not run)\b", verification, re.IGNORECASE)
+):
+    raise SystemExit(
+        "Wear listener export plan must remain completed with actual hosted verification recorded."
+    )
+PY
+
 if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
   printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2
   exit 1

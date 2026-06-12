@@ -1,6 +1,6 @@
 # Wear Listener Service Export Contract
 
-status: implementation complete; hosted verification pending
+status: completed
 
 ## Goal
 
@@ -26,7 +26,9 @@ layer guidance declares manifest-registered listener services with
 3. **Document the boundary.** Explain why this one service remains exported
    while `NotificationActivity` remains internal-only.
 4. **Verify locally and in hosted analysis.** Run all Make aliases, focused
-   hostile mutations, both canonical workflow events, and CodeQL.
+   hostile mutations, the configured pull-request workflow, and CodeQL. The
+   workflow intentionally limits push execution to `master`, so a feature-head
+   push run is unavailable before an authorized merge.
 
 ## Requirements
 
@@ -46,8 +48,9 @@ layer guidance declares manifest-registered listener services with
 - `sh -n scripts/check-baseline.sh` and `git diff --check`.
 - Focused mutations for a missing export, `exported="false"`, a missing action,
   an additional action, and an additional intent filter.
-- GitHub Actions push and pull-request checks at the same head.
-- CodeQL analysis with the implicit-export alert closed.
+- GitHub Actions pull-request check at the implementation head.
+- CodeQL analysis with no implicit-export alert on the pull-request ref. The
+  existing default-branch alert remains open until the fix is merged.
 
 ## Boundaries
 
@@ -72,5 +75,12 @@ layer guidance declares manifest-registered listener services with
 - `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
 - Five focused manifest mutations were rejected: missing export, false export,
   missing binding action, an extra action, and an additional intent filter.
-- Hosted push, pull-request, and CodeQL verification remains pending for the
-  implementation commit.
+- Pull-request run `27408397355` passed the macOS static baseline and both Xcode
+  project-listing checks at implementation commit
+  `f2eadffa5cd107bbd74bf45c9032cf8ad2116d43`.
+- CodeQL run `27408395236` passed Actions and Java/Kotlin analysis at the same
+  commit, and `refs/pull/1/head` had zero open code-scanning alerts.
+- Default-branch alert #1 remains open against `master` commit
+  `561a54ca56f5283f278be9cf40cb096b14f22623` until an authorized merge. No
+  feature-branch push run exists because the workflow's push trigger is
+  intentionally limited to `master`.
