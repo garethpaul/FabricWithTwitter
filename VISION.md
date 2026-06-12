@@ -19,6 +19,7 @@ Priority:
 - Keep Android sample projects and Fabric setup recognizable
 - Avoid committing Twitter keys, Fabric API keys, tokens, or signing material
 - Keep legacy dependency assumptions visible
+- Keep GitHub Actions aligned with the local `make check` baseline
 
 Current baseline:
 
@@ -50,6 +51,8 @@ Current baseline:
   ignored.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
   static checks remain the minimum verification path.
+- GitHub Actions runs the local `make check` baseline for pushes and pull
+  requests.
 
 Next priorities:
 
@@ -69,6 +72,7 @@ Contribution rules:
 - Preserve Wear mobile tweet display container guards when changing legacy
   tweet UI layouts.
 - Verify Twitter login/display behavior with local credentials when changing it.
+- Keep `.github/workflows/check.yml` in sync with the local static baseline.
 
 ## Security
 
