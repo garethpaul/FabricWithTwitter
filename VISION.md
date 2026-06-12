@@ -34,6 +34,8 @@ Current baseline:
   logging raw tweet objects or raw errors.
 - The iOS TableView sample resets its in-flight tweet-load flag on guest-login
   failure and tweet-load completion.
+- The iOS TableView sample type-checks loaded TwitterKit objects before
+  replacing visible rows.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container
@@ -51,8 +53,10 @@ Current baseline:
   ignored.
 - Xcode project listing is attempted when `xcodebuild` is installed; otherwise
   static checks remain the minimum verification path.
-- GitHub Actions runs the local `make check` baseline for pushes and pull
-  requests.
+- GitHub Actions runs the local `make check` baseline on macOS for pushes and
+  pull requests, including both Xcode project-listing checks.
+- Hosted checkout credentials are not persisted and actions remain pinned to
+  immutable revisions.
 
 Next priorities:
 

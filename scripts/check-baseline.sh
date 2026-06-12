@@ -8,6 +8,7 @@ WEAR_SENDER_CHARSET_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-utf8-send
 TWITTER_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-twitter-display-log-boundary.md"
 WEAR_PATH_LOG_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-message-path-log-boundary.md"
 IOS_TWEET_LOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md"
+IOS_TWEET_TYPE_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md"
 WEAR_TWEET_PAYLOAD_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-payload-guard.md"
 WEAR_LOGIN_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-login-button-guard.md"
 WEAR_NOTIFICATION_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-notification-text-view-guard.md"
@@ -15,6 +16,7 @@ ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
+CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -32,6 +34,7 @@ require_file() {
 
 for path in \
   ".gitignore" \
+  ".github/CODEOWNERS" \
   ".github/workflows/check.yml" \
   "CHANGES.md" \
   "Makefile" \
@@ -50,6 +53,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
+  "docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md" \
   "docs/plans/2026-06-09-wear-login-button-guard.md" \
   "docs/plans/2026-06-09-wear-message-utf8-sender.md" \
   "docs/plans/2026-06-09-wear-message-path-log-boundary.md" \
@@ -215,6 +219,14 @@ if ! grep -Fq "if session == nil" "$IOS_TABLE_VIEW" ||
   exit 1
 fi
 
+if ! grep -Fq "if let loadedTweetObjects = twttrs" "$IOS_TABLE_VIEW" ||
+  ! grep -Fq "if let tweet = i as? TWTRTweet" "$IOS_TABLE_VIEW" ||
+  ! grep -Fq "self.tweets = loadedTweets" "$IOS_TABLE_VIEW" ||
+  grep -Fq "self.tweets.append(i as TWTRTweet)" "$IOS_TABLE_VIEW"; then
+  printf '%s\n' "iOS loaded tweets must be type-checked before replacing table contents." >&2
+  exit 1
+fi
+
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||
   ! grep -Fq "FABRIC_API_KEY" "$ROOT_DIR/README.md" ||
@@ -240,9 +252,74 @@ else
   printf '%s\n' "Skipping xcodebuild project listing: xcodebuild is not installed."
 fi
 
-if ! grep -Fq "actions/checkout@v4" "$CI_WORKFLOW" ||
-  ! grep -Fq "run: make check" "$CI_WORKFLOW"; then
-  printf '%s\n' "GitHub Actions workflow must run make check." >&2
+workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | LC_ALL=C sort)
+if [ "$workflow_paths" != "$CI_WORKFLOW" ]; then
+  printf '%s\n' "The reviewed check workflow must be the only GitHub Actions workflow." >&2
+  exit 1
+fi
+
+codeowner_rules=$(grep -Ev '^[[:space:]]*(#|$)' "$CODEOWNERS" 2>/dev/null || true)
+if [ "$codeowner_rules" != '* @garethpaul' ]; then
+  printf '%s\n' "CODEOWNERS must retain repository-wide ownership." >&2
+  exit 1
+fi
+
+if grep -E '^[[:space:]]*(-[[:space:]]+)?uses:' "$CI_WORKFLOW" | grep -Ev '@[0-9a-f]{40}([[:space:]]+#.*)?$' >/dev/null; then
+  printf '%s\n' "GitHub Actions must use immutable commit revisions." >&2
+  exit 1
+fi
+
+workflow_uses=$(grep -E '^[[:space:]]*(-[[:space:]]+)?uses:' "$CI_WORKFLOW" | sed -E 's/^[[:space:]]*(-[[:space:]]+)?//')
+if [ "$workflow_uses" != 'uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3' ]; then
+  printf '%s\n' "GitHub Actions must use only the reviewed checkout action." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^permissions:$' "$CI_WORKFLOW")" -ne 1 ] ||
+  [ "$(grep -Ec '^  contents: read$' "$CI_WORKFLOW")" -ne 1 ] ||
+  grep -Eq 'write-all|contents:[[:space:]]*write|pull-requests:[[:space:]]*write|actions:[[:space:]]*write' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions permissions must remain globally read-only." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 1 ] ||
+  ! grep -Eq '^[[:space:]]*run: make check[[:space:]]*$' "$CI_WORKFLOW" ||
+  grep -Eq 'continue-on-error:[[:space:]]*true|if:[[:space:]]*false' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must run exactly the required Make gate without bypasses." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^[[:space:]]*persist-credentials: false$' "$CI_WORKFLOW")" -ne 1 ] ||
+  grep -Eq '^[[:space:]]*persist-credentials: true$' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions checkout credentials must not persist." >&2
+  exit 1
+fi
+
+for workflow_contract in \
+  'push:' \
+  'branches:' \
+  '- master' \
+  'pull_request:' \
+  'workflow_dispatch:' \
+  'contents: read' \
+  'cancel-in-progress: true' \
+  'runs-on: macos-15' \
+  'timeout-minutes: 10' \
+  'persist-credentials: false'; do
+  if ! grep -Fq -- "$workflow_contract" "$CI_WORKFLOW"; then
+    printf '%s\n' "GitHub Actions workflow must keep contract: $workflow_contract" >&2
+    exit 1
+  fi
+done
+
+if ! awk '
+  /^  pull_request:$/ {
+    found = 1
+    if (getline <= 0 || $0 != "  push:") exit 1
+  }
+  END { if (!found) exit 1 }
+' "$CI_WORKFLOW"; then
+  printf '%s\n' "Pull request verification must apply without branch restrictions." >&2
   exit 1
 fi
 
@@ -253,7 +330,6 @@ if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
   printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
 fi
-
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
   exit 1
@@ -281,6 +357,11 @@ fi
 
 if ! grep -Fq "status: completed" "$IOS_TWEET_LOAD_PLAN"; then
   printf '%s\n' "iOS tweet load in-flight reset plan must be marked completed." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$IOS_TWEET_TYPE_PLAN"; then
+  printf '%s\n' "iOS tweet type guard plan must be marked completed." >&2
   exit 1
 fi
 

@@ -2,7 +2,14 @@
 
 ## 2026-06-10
 
-- Added a GitHub Actions workflow that runs `make check`.
+- Type-checked iOS TwitterKit response objects before replacing visible table
+  contents, avoiding force-cast crashes and duplicate stale rows.
+- Added a bounded, least-privilege macOS GitHub Actions workflow that runs
+  `make check` and parses both Xcode projects.
+- Disabled persisted checkout credentials and added focused workflow policy
+  checks for triggers, permissions, immutable actions, and command bypasses.
+- Added repository-wide ownership and corrected contributor guidance to cover
+  the mixed Android, Wear, iOS, and watchOS sample structure.
 - Extended the baseline checker and docs to require the hosted CI verification
   path.
 

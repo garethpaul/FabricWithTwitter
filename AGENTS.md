@@ -2,7 +2,8 @@
 
 ## Repository purpose
 
-`garethpaul/FabricWithTwitter` is an Apple platform application or Objective-C/Swift sample. A simple application that showcases how to integrate Fabric with Twitter
+`garethpaul/FabricWithTwitter` is a collection of legacy Android, Wear, iOS,
+and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 
 ## Project structure
 
@@ -14,7 +15,9 @@
 
 ## Development commands
 
-- Install dependencies: no repository-specific install command is documented.
+- Install dependencies: use the historical Android Studio/Gradle and Xcode
+  environments documented by each sample; no current one-command install is
+  available.
 - Full baseline: `make check`
 - Lint/static checks: `make lint`
 - Tests: `make test`
@@ -23,11 +26,12 @@
 
 ## Coding conventions
 
-- Language mix noted in the README: C/C++ headers (43), Swift (9), Java (6).
+- Preserve the existing Java and Swift style; avoid broad SDK modernization in
+  changes intended only to maintain the historical samples.
 
 ## Testing guidance
 
-- Test-related files detected: `iOS/TableViewTweetsSwift/TableViewTweetsSwiftTests/TableViewTweetsSwiftTests.swift`, `iOS/WatchSample/WatchSampleTests/WatchSampleTests.swift`
+- Tests exist under both Android sample trees and the two iOS Xcode projects.
 - Start with the narrowest relevant test or Make target, then run `make check` before handing off if the change is not documentation-only.
 - Keep README verification notes in sync when commands, fixtures, or supported toolchains change.
 
@@ -46,6 +50,11 @@
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that the text view target exists before setting tweet text.
+
+- The iOS TableView sample type-checks TwitterKit response objects before
+  replacing visible rows.
+- CI must remain read-only, credential-free, pinned to immutable actions, and
+  capable of parsing both Xcode projects on macOS.
 
 ## Agent workflow
 

@@ -29,6 +29,8 @@ Helpful reports include:
 - Wear mobile Twitter login button setup and activity-result forwarding should
   stay null-safe when legacy layouts drift.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
+- iOS loaded TwitterKit response objects should be type-checked before they
+  replace visible table contents.
 - Wear tweet loading should skip missing, empty, or whitespace-only tweet text
   before sending messages to the watch sample or displaying notifications.
 - Wear notification display should stay null-safe when legacy layouts drift or
@@ -43,8 +45,14 @@ Helpful reports include:
 - Review found file, document, data, or media parsing flows; changes in those areas should receive security-focused review before merge.
 - Review found database, model, query, or persistence-related code; changes in those areas should receive security-focused review before merge.
 - No primary dependency manifest was detected in the repository root. If dependencies are added later, include a manifest and prefer reproducible installation instructions.
-- GitHub Actions runs `make check` for pushes and pull requests so the static
-  Android, Wear, iOS, and credential guardrails stay enforced before merge.
+- GitHub Actions runs `make check` with read-only repository permissions for
+  pushes and pull requests so the static Android, Wear, iOS, credential, and
+  Xcode project guardrails stay enforced before merge.
+- Checkout credentials are not persisted, and all workflow actions must use
+  immutable commit revisions.
+- Repository-wide CODEOWNERS records the owner for source, credential
+  boundaries, and workflow changes; branch rules must require that review for
+  enforcement.
 
 ## Mobile Privacy Notes
 
