@@ -17,6 +17,7 @@ WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-boundary.md"
 WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service-export-contract.md"
+WEAR_PAYLOAD_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-message-payload-limit.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
@@ -65,6 +66,7 @@ for path in \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-12-wear-notification-activity-boundary.md" \
   "docs/plans/2026-06-12-wear-listener-service-export-contract.md" \
+  "docs/plans/2026-06-13-wear-message-payload-limit.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -178,6 +180,16 @@ if ! grep -Fq "path == null || tweetText == null || messageClient == null" "$WEA
   exit 1
 fi
 
+if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WEAR_MOBILE_ACTIVITY")" -ne 1 ] ||
+  ! grep -Fq "final byte[] tweetPayload = safeTweetText.getBytes(UTF_8);" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "tweetPayload.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq 'Log.d(TAG, "Skipping oversized wear tweet payload")' "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "messageClient, node.getId(), path, tweetPayload).await();" "$WEAR_MOBILE_ACTIVITY" ||
+  grep -Fq "path, safeTweetText.getBytes(UTF_8)).await();" "$WEAR_MOBILE_ACTIVITY"; then
+  printf '%s\n' "Wear mobile sender must enforce and reuse the reviewed 1024-byte payload limit." >&2
+  exit 1
+fi
+
 wear_result_method=$(sed -n '/protected void onActivityResult/,$p' "$WEAR_MOBILE_ACTIVITY")
 if ! grep -Fq "if (loginButton != null)" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "loginButton.setCallback" "$WEAR_MOBILE_ACTIVITY" ||
@@ -199,6 +211,51 @@ if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LI
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
   exit 1
 fi
+
+if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WEAR_LISTENER")" -ne 1 ] ||
+  ! grep -Fq "messageData.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_LISTENER" ||
+  ! grep -Fq 'Log.e(TAG, "Ignoring oversized wear tweet payload")' "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear listener must enforce the reviewed 1024-byte payload limit before decoding." >&2
+  exit 1
+fi
+
+python3 - "$WEAR_MOBILE_ACTIVITY" "$WEAR_LISTENER" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+sender = Path(sys.argv[1]).read_text()
+listener = Path(sys.argv[2]).read_text()
+
+constant = re.compile(r"private static final int MAX_TWEET_PAYLOAD_BYTES = (\d+);")
+sender_limits = constant.findall(sender)
+listener_limits = constant.findall(listener)
+if sender_limits != ["1024"] or listener_limits != sender_limits:
+    raise SystemExit("Wear payload limits must be single, equal 1024-byte constants.")
+
+sender_contract = (
+    "final String safeTweetText = tweetText.trim();",
+    "final byte[] tweetPayload = safeTweetText.getBytes(UTF_8);",
+    "tweetPayload.length > MAX_TWEET_PAYLOAD_BYTES",
+    "new Thread(new Runnable()",
+    "messageClient, node.getId(), path, tweetPayload).await();",
+)
+listener_contract = (
+    "messageData == null || messageData.length == 0",
+    "messageData.length > MAX_TWEET_PAYLOAD_BYTES",
+    "new String(messageData, UTF_8).trim()",
+    "new Intent(this, NotificationActivity.class)",
+    "notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())",
+)
+
+for name, source, contract in (
+    ("sender", sender, sender_contract),
+    ("listener", listener, listener_contract),
+):
+    positions = [source.find(fragment) for fragment in contract]
+    if -1 in positions or positions != sorted(positions) or len(set(positions)) != len(positions):
+        raise SystemExit(f"Wear {name} payload validation ordering must remain fail-closed.")
+PY
 
 if grep -Eq 'Log\.[a-z]+\([^;]*messageEvent\.getPath\(\)' "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must not log raw incoming message paths." >&2
@@ -377,6 +434,14 @@ if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
   printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
 fi
+
+if ! grep -Fq "reject UTF-8 payloads over 1024 bytes" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "reject UTF-8 payloads over 1024 bytes" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "bounded to 1024 UTF-8 bytes" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Bounded Wear tweet messages to 1024 UTF-8 bytes" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project docs must record the Wear tweet payload boundary." >&2
+  exit 1
+fi
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
   exit 1
@@ -490,6 +555,26 @@ if (
 ):
     raise SystemExit(
         "Wear listener export plan must remain completed with actual hosted verification recorded."
+    )
+PY
+
+python3 - "$WEAR_PAYLOAD_LIMIT_PLAN" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+plan = Path(sys.argv[1]).read_text()
+statuses = re.findall(r"^status: .+$", plan, flags=re.MULTILINE)
+required = (
+    "sender guard mutation failed",
+    "listener guard mutation failed",
+    "limit drift mutation failed",
+    "hosted pull-request check",
+)
+
+if statuses != ["status: completed"] or any(item not in plan for item in required):
+    raise SystemExit(
+        "Wear payload limit plan must record completed status and actual verification."
     )
 PY
 

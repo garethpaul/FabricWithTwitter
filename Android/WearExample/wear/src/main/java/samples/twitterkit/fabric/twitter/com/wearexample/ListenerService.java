@@ -19,6 +19,7 @@ public class ListenerService extends WearableListenerService {
     private static final String PATH = "/new_tweet";
     private static final int NOTIFICATION_ID = 1;
     private static final Charset UTF_8 = Charset.forName("UTF-8");
+    private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;
 
     private GoogleApiClient client;
 
@@ -48,15 +49,19 @@ public class ListenerService extends WearableListenerService {
             Log.e(TAG, "Ignoring wear message without tweet payload");
             return;
         }
+        if (messageData.length > MAX_TWEET_PAYLOAD_BYTES) {
+            Log.e(TAG, "Ignoring oversized wear tweet payload");
+            return;
+        }
 
-        // Build intent for notification content
-        Intent viewIntent = new Intent(this, NotificationActivity.class);
         String tweet = new String(messageData, UTF_8).trim();
         if (tweet.length() == 0) {
             Log.e(TAG, "Ignoring wear message without tweet text");
             return;
         }
 
+        // Build intent for validated notification content
+        Intent viewIntent = new Intent(this, NotificationActivity.class);
         viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet);
         PendingIntent viewPendingIntent =
                 PendingIntent.getActivity(this, 0, viewIntent, 0);

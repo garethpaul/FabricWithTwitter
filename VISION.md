@@ -42,6 +42,7 @@ Current baseline:
   exists before adding a TwitterKit `TweetView`.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
+- Wear tweet payloads are bounded to 1024 UTF-8 bytes before send and decode.
 - Wear notification display verifies that its text view target exists before
   setting tweet text.
 - The Wear notification detail activity is internal-only and has no launcher

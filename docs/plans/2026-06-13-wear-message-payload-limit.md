@@ -1,7 +1,7 @@
 ---
 title: Wear Message Payload Limit
 type: security
-status: in_progress
+status: completed
 date: 2026-06-13
 ---
 
@@ -73,3 +73,34 @@ Files: `scripts/check-baseline.sh`, `README.md`, `SECURITY.md`, `VISION.md`, `CH
   scans.
 - Take one bounded exact-head pull-request and CodeQL snapshot after push; do not
   poll.
+
+## Work Completed
+
+- Added matching 1024-byte payload constants to the mobile sender and Wear
+  listener.
+- Encoded the outbound tweet once, rejected oversized bytes before starting the
+  send thread, and reused the validated byte array for each connected node.
+- Rejected oversized inbound bytes before UTF-8 decoding, intent construction,
+  or notification creation.
+- Extended the static gate with exact constants, generic diagnostics, shared
+  limit checks, and fail-closed ordering contracts.
+- Updated repository guidance and change history with the cross-device payload
+  boundary.
+
+## Verification Completed
+
+- `make check`, `make lint`, `make test`, and `make build` passed against the
+  final implementation. Each target ran the rooted static baseline gate;
+  `xcodebuild` project listing was skipped because `xcodebuild` is not installed.
+- `sh -n scripts/check-baseline.sh`, Android manifest XML parsing, and
+  `git diff --check` passed.
+- The intended-file secret scan returned no candidate credentials.
+- The sender guard mutation failed with `Wear mobile sender must enforce and
+  reuse the reviewed 1024-byte payload limit.`
+- The listener guard mutation failed with `Wear listener must enforce the
+  reviewed 1024-byte payload limit before decoding.`
+- The limit drift mutation failed with `Wear listener must enforce the reviewed
+  1024-byte payload limit before decoding.`
+- The hosted pull-request check is not available before push; one bounded
+  exact-head snapshot will be recorded in the engineering tracker without
+  polling.
