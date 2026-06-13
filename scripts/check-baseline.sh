@@ -19,6 +19,7 @@ WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-b
 WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service-export-contract.md"
 WEAR_PAYLOAD_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-message-payload-limit.md"
 SAMPLE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-cross-platform-sample-verification.md"
+WEAR_STRICT_UTF8_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-strict-utf8-decoding.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -71,6 +72,7 @@ for path in \
   "docs/plans/2026-06-12-wear-listener-service-export-contract.md" \
   "docs/plans/2026-06-13-wear-message-payload-limit.md" \
   "docs/plans/2026-06-13-cross-platform-sample-verification.md" \
+  "docs/plans/2026-06-13-wear-strict-utf8-decoding.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -209,7 +211,10 @@ if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LI
   ! grep -Fq "Ignoring unexpected wear path" "$WEAR_LISTENER" ||
   ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER" ||
   ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_LISTENER" ||
-  ! grep -Fq "new String(messageData, UTF_8).trim()" "$WEAR_LISTENER" ||
+  ! grep -Fq "decodeTweetPayload(messageData)" "$WEAR_LISTENER" ||
+  ! grep -Fq "CodingErrorAction.REPORT" "$WEAR_LISTENER" ||
+  ! grep -Fq "CharacterCodingException" "$WEAR_LISTENER" ||
+  grep -Fq "new String(messageData, UTF_8)" "$WEAR_LISTENER" ||
   ! grep -Fq "tweet.length() == 0" "$WEAR_LISTENER" ||
   ! grep -Fq "Ignoring wear message without tweet text" "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
@@ -247,7 +252,9 @@ sender_contract = (
 listener_contract = (
     "messageData == null || messageData.length == 0",
     "messageData.length > MAX_TWEET_PAYLOAD_BYTES",
-    "new String(messageData, UTF_8).trim()",
+    "decodeTweetPayload(messageData)",
+    "decodedTweet == null",
+    "String tweet = decodedTweet.trim()",
     "new Intent(this, NotificationActivity.class)",
     "notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())",
 )
@@ -259,6 +266,33 @@ for name, source, contract in (
     positions = [source.find(fragment) for fragment in contract]
     if -1 in positions or positions != sorted(positions) or len(set(positions)) != len(positions):
         raise SystemExit(f"Wear {name} payload validation ordering must remain fail-closed.")
+PY
+
+python3 - "$WEAR_LISTENER" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text()
+required = (
+    "UTF_8.newDecoder()",
+    ".onMalformedInput(CodingErrorAction.REPORT)",
+    ".onUnmappableCharacter(CodingErrorAction.REPORT)",
+    "decoder.decode(ByteBuffer.wrap(messageData)).toString()",
+    "catch (CharacterCodingException exception)",
+    'Log.e(TAG, "Ignoring malformed UTF-8 wear tweet payload")',
+)
+if any(item not in source for item in required):
+    raise SystemExit("Wear listener must reject malformed UTF-8 without replacement decoding")
+
+decode = source.find("decodeTweetPayload(messageData)")
+decode_failure = source.find("if (decodedTweet == null)", decode)
+trim = source.find("String tweet = decodedTweet.trim()", decode_failure)
+intent = source.find("new Intent(this, NotificationActivity.class)", trim)
+notify = source.find("notificationManager.notify", intent)
+if -1 in (decode, decode_failure, trim, intent, notify) or not (
+    decode < decode_failure < trim < intent < notify
+):
+    raise SystemExit("Strict UTF-8 decoding must precede notification construction and display")
 PY
 
 if grep -Eq 'Log\.[a-z]+\([^;]*messageEvent\.getPath\(\)' "$WEAR_LISTENER"; then
@@ -446,6 +480,14 @@ if ! grep -Fq "reject UTF-8 payloads over 1024 bytes" "$ROOT_DIR/README.md" ||
   printf '%s\n' "Project docs must record the Wear tweet payload boundary." >&2
   exit 1
 fi
+
+if ! grep -Fq "rejects malformed UTF-8 instead of" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "reject malformed or unmappable UTF-8" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "rejects malformed or unmappable UTF-8" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Reject malformed or unmappable Wear UTF-8 payloads" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project docs must preserve strict Wear UTF-8 decoding." >&2
+  exit 1
+fi
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
   exit 1
@@ -581,6 +623,14 @@ if statuses != ["status: completed"] or any(item not in plan for item in require
         "Wear payload limit plan must record completed status and actual verification."
     )
 PY
+
+if ! grep -Fq "status: completed" "$WEAR_STRICT_UTF8_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$WEAR_STRICT_UTF8_PLAN" ||
+  ! grep -Fq "xcodebuild was unavailable" "$WEAR_STRICT_UTF8_PLAN" ||
+  ! grep -Fq "No Twitter or Fabric credentials" "$WEAR_STRICT_UTF8_PLAN"; then
+  printf '%s\n' "Wear strict UTF-8 plan must record completed local verification." >&2
+  exit 1
+fi
 
 if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
   printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2

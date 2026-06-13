@@ -2,6 +2,8 @@
 
 ## 2026-06-13
 
+- Reject malformed or unmappable Wear UTF-8 payloads before notification state
+  is created.
 - Bounded Wear tweet messages to 1024 UTF-8 bytes before mobile transport and
   listener decoding.
 - Added a truthful per-sample Android, Wear, iOS, and watchOS verification matrix

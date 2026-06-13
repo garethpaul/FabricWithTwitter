@@ -35,6 +35,8 @@ Helpful reports include:
   before sending messages to the watch sample or displaying notifications.
 - Wear tweet messages should reject UTF-8 payloads over 1024 bytes before mobile
   transport or listener decoding.
+- Wear listener decoding should reject malformed or unmappable UTF-8 before
+  creating notification state.
 - Wear notification display should stay null-safe when legacy layouts drift or
   omit the tweet text view target.
 - The Wear notification detail activity should remain non-exported and without

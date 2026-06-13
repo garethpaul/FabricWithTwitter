@@ -11,7 +11,11 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 
 
 public class ListenerService extends WearableListenerService {
@@ -54,7 +58,12 @@ public class ListenerService extends WearableListenerService {
             return;
         }
 
-        String tweet = new String(messageData, UTF_8).trim();
+        String decodedTweet = decodeTweetPayload(messageData);
+        if (decodedTweet == null) {
+            Log.e(TAG, "Ignoring malformed UTF-8 wear tweet payload");
+            return;
+        }
+        String tweet = decodedTweet.trim();
         if (tweet.length() == 0) {
             Log.e(TAG, "Ignoring wear message without tweet text");
             return;
@@ -80,6 +89,17 @@ public class ListenerService extends WearableListenerService {
         // Build the notification and issues it with notification manager.
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
 
+    }
+
+    private static String decodeTweetPayload(byte[] messageData) {
+        CharsetDecoder decoder = UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT);
+        try {
+            return decoder.decode(ByteBuffer.wrap(messageData)).toString();
+        } catch (CharacterCodingException exception) {
+            return null;
+        }
     }
 
     @Override

@@ -1,6 +1,6 @@
 # Reject Malformed Wear UTF-8
 
-status: planned
+status: completed
 
 ## Context
 
@@ -31,3 +31,20 @@ text should be derived only from a valid UTF-8 payload.
 
 - Changing the sender encoding, message path, payload size, notification text,
   activity export, service binding, Fabric/Twitter configuration, or Gradle.
+
+## Work Completed
+
+- Added a UTF-8 decoder that reports malformed and unmappable input.
+- Rejected decode failures with a generic diagnostic before trimming or
+  constructing notification state.
+- Added exact decoder, ordering, documentation, and plan-evidence contracts.
+
+## Verification Completed
+
+- `make lint`, `make test`, `make build`, and `make check` passed; `xcodebuild was unavailable` on Linux, so no current-Xcode or device result is claimed.
+- XML parsing, shell syntax, `git diff --check`, intended-path review, artifact
+  inspection, and added-line secret scanning passed.
+- Eight isolated hostile mutations were rejected across malformed/unmappable
+  actions, exception handling, replacement decoding, ordering, docs, and plan evidence.
+- No Twitter or Fabric credentials, Wear hardware, notifications, live service,
+  signing material, or user data were used.

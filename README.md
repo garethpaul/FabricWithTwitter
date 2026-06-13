@@ -101,7 +101,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet messages reject UTF-8 payloads over 1024 bytes before transport or
-  listener decoding.
+  listener decoding, and the listener rejects malformed UTF-8 instead of
+  displaying replacement characters.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
 - See `docs/manual-sample-verification.md` for per-sample toolchain, build,
