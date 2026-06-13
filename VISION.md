@@ -62,13 +62,17 @@ Current baseline:
   pull requests, including both Xcode project-listing checks.
 - Hosted checkout credentials are not persisted and actions remain pinned to
   immutable revisions.
+- A per-sample verification matrix now separates Android DisplayTweets, Wear
+  mobile/listener, iOS TableView, and WatchSample build/runtime evidence,
+  privacy constraints, known unsafe/destructive paths, cleanup, and redaction
+  without claiming that the matrix has been executed.
 
 Next priorities:
 
-- Add clearer build and verification notes for each sample app
 - Replace dynamic dependencies with reproducible versions if the sample is revived
 - Document modern alternatives to Fabric/TwitterKit
-- Add small checks or manual steps for login/display behavior
+- Add executable login, display, Wear transport, and lifecycle tests after the
+  retired dependencies can be isolated or replaced
 
 Contribution rules:
 

@@ -1,7 +1,7 @@
 ---
 title: Cross-Platform Sample Verification Matrix
 type: verification
-status: planned
+status: completed
 date: 2026-06-13
 ---
 
@@ -198,3 +198,36 @@ build/install, and external-service runtime evidence.
   generated artifacts.
 - Push normally, open a stacked PR on the green Wear payload branch, and take one
   bounded exact-head configured-event/CodeQL snapshot without polling.
+
+---
+
+## Verification
+
+- An isolated full `make check` passed with the completed-plan contract enabled;
+  local `xcodebuild` was explicitly unavailable on Linux.
+- Seventeen isolated hostile mutations were rejected for weakened evidence,
+  fixed-public-content, DisplayTweets privacy, Wear null-safety/UTF-8/size,
+  listener export/internal activity/wrong path, iOS typed-load/unsafe permalink,
+  Android local credential injection, iOS login-success in-flight state,
+  no-force-crash, credential rotation, roadmap, and plan-status requirements.
+- The verification matrix remains unexecuted. No Android/iOS/watch build,
+  signing/install, Fabric/Twitter login/load, Wear transport/notification, or
+  deliberate crash action was performed.
+- Plan-based review found and fixed the iOS in-flight reset timing and the need
+  for explicitly uncommitted Android credential fixture injection; no actionable
+  review findings remain.
+- Shell syntax, all four maintained Make targets, three Android manifest parses,
+  two Apple plist parses, `git diff --check`, exact eight-path review, unchanged
+  source/build/manifest/project/framework/workflow/Makefile/ignore inspection,
+  credential/signing inspection, and generated-artifact inspection passed.
+- The exact pushed head still requires one bounded exact-head configured-event/CodeQL snapshot;
+  hosted project listing will remain separate from sample runtime evidence.
+
+## Work Completed
+
+- Added independent Android DisplayTweets, Wear mobile, Wear listener/
+  notification, iOS TableView, and iOS WatchSample verification paths.
+- Recorded fixed public-content, unsafe iOS permalink, destructive WatchSample,
+  privacy, cleanup, blocker, and four-class evidence boundaries.
+- Added section-scoped maintenance contracts and updated project guidance without
+  modifying source, build files, manifests, projects, workflows, or credentials.

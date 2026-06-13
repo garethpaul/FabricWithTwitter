@@ -58,6 +58,10 @@ Helpful reports include:
   Xcode project guardrails stay enforced before merge.
 - Checkout credentials are not persisted, and all workflow actions must use
   immutable commit revisions.
+- Runtime claims require the per-sample matrix in
+  `docs/manual-sample-verification.md`, locally owned credentials/devices, and
+  redacted evidence. Static checks or project listing do not prove Android,
+  Wear, iOS, watchOS, Fabric, TwitterKit, or Twitter service behavior.
 - Repository-wide CODEOWNERS records the owner for source, credential
   boundaries, and workflow changes; branch rules must require that review for
   enforcement.

@@ -80,8 +80,11 @@ GitHub Actions runs this same `make check` baseline on macOS for pushes and
 pull requests, including Xcode project parsing without requiring credentials
 or persisting checkout credentials.
 
-For functional verification, use Android Studio/Gradle and Xcode's test action
-or `xcodebuild test` with the appropriate scheme and destination.
+For functional verification, follow
+[`docs/manual-sample-verification.md`](docs/manual-sample-verification.md) and
+record Android DisplayTweets, Wear mobile/listener, iOS TableView, and iOS
+WatchSample results separately. The matrix was not executed by this Linux
+maintenance session; hosted Xcode project listing is not runtime proof.
 
 When the required SDK or runtime is unavailable, use static checks and source review first, then verify on a machine that has the matching platform toolchain.
 
@@ -101,6 +104,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   listener decoding.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
+- See `docs/manual-sample-verification.md` for per-sample toolchain, build,
+  runtime, privacy, destructive-watch-action, cleanup, and evidence boundaries.
 - The Wear listener service is explicitly exported only for Google Play
   Services binding and exposes only the Wear `BIND_LISTENER` action.
 - The Android Wear mobile sample forwards Twitter login activity results only
