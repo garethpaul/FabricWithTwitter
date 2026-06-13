@@ -39,6 +39,8 @@ Helpful reports include:
   creating notification state.
 - Wear notification display should stay null-safe when legacy layouts drift or
   omit the tweet text view target.
+- Reused Wear notification PendingIntents should update the validated tweet
+  extra so later notifications cannot open stale text.
 - The Wear notification detail activity should remain non-exported and without
   intent filters so only the app's explicit notification intent can supply
   tweet text.

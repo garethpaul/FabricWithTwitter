@@ -2,11 +2,13 @@
 title: Wear Notification PendingIntent Refresh
 type: correctness
 date: 2026-06-13
-status: planned
+status: completed
 execution: code
 ---
 
 # Wear Notification PendingIntent Refresh
+
+## Status: Completed
 
 ## Summary
 
@@ -42,3 +44,23 @@ retaining the first tweet extra even after a later notification is displayed.
 
 - Modernizing Android notification channels or mutability flags for current SDKs.
 - Changing notification IDs, tweet payloads, Wear paths, or UI content.
+
+## Work Completed
+
+- Added `PendingIntent.FLAG_UPDATE_CURRENT` to the existing explicit
+  notification activity intent.
+- Preserved the request code and validated tweet extra while ensuring later
+  notifications refresh stale PendingIntent state.
+- Added source, documentation, and completed-plan contracts.
+
+## Verification Completed
+
+- The focused source contract required exactly one update-current PendingIntent,
+  rejected flags `0`, and preserved the explicit validated tweet extra.
+- `make check`, `make lint`, `make test`, and `make build` passed the maintained
+  Linux baseline; local Android/Wear and xcodebuild toolchains were unavailable.
+- `sh -n scripts/check-baseline.sh` and `git diff --check` passed.
+- Four isolated hostile mutations were rejected: flags `0`, missing tweet extra,
+  stale plan status, and missing mutation evidence.
+- No Android/Wear emulator or device, Fabric/Twitter credential, network request,
+  signing material, or live notification interaction was used.

@@ -105,6 +105,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   displaying replacement characters.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
+- Reused Wear notification intents refresh their tweet extra before display so
+  tapping a later notification does not reopen stale content.
 - See `docs/manual-sample-verification.md` for per-sample toolchain, build,
   runtime, privacy, destructive-watch-action, cleanup, and evidence boundaries.
 - The Wear listener service is explicitly exported only for Google Play

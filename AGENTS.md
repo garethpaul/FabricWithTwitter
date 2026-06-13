@@ -50,6 +50,7 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that the text view target exists before setting tweet text.
+- Wear notification PendingIntents must refresh the latest validated tweet extra.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.

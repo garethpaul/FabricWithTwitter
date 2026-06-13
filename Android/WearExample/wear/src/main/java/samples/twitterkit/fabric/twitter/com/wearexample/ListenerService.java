@@ -73,7 +73,7 @@ public class ListenerService extends WearableListenerService {
         Intent viewIntent = new Intent(this, NotificationActivity.class);
         viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet);
         PendingIntent viewPendingIntent =
-                PendingIntent.getActivity(this, 0, viewIntent, 0);
+                PendingIntent.getActivity(this, 0, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)

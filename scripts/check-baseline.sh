@@ -20,6 +20,7 @@ WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service
 WEAR_PAYLOAD_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-message-payload-limit.md"
 SAMPLE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-cross-platform-sample-verification.md"
 WEAR_STRICT_UTF8_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-strict-utf8-decoding.md"
+WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -73,6 +74,7 @@ for path in \
   "docs/plans/2026-06-13-wear-message-payload-limit.md" \
   "docs/plans/2026-06-13-cross-platform-sample-verification.md" \
   "docs/plans/2026-06-13-wear-strict-utf8-decoding.md" \
+  "docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -80,6 +82,13 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+if [ "$(grep -Fc 'PendingIntent.getActivity(this, 0, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT)' "$WEAR_LISTENER")" -ne 1 ] ||
+  grep -Fq 'PendingIntent.getActivity(this, 0, viewIntent, 0)' "$WEAR_LISTENER" ||
+  ! grep -Fq 'viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet)' "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear notification PendingIntent must refresh the latest validated tweet extra." >&2
+  exit 1
+fi
 
 if grep -R -E './Fabric\.framework/run [0-9a-f]{32,}|~/Downloads/Fabric\.framework/run [0-9a-f]{32,}' "$ROOT_DIR/iOS" --include='project.pbxproj'; then
   printf '%s\n' "iOS Fabric run scripts must not contain committed API keys or build secrets." >&2
@@ -629,6 +638,29 @@ if ! grep -Fq "status: completed" "$WEAR_STRICT_UTF8_PLAN" ||
   ! grep -Fq "xcodebuild was unavailable" "$WEAR_STRICT_UTF8_PLAN" ||
   ! grep -Fq "No Twitter or Fabric credentials" "$WEAR_STRICT_UTF8_PLAN"; then
   printf '%s\n' "Wear strict UTF-8 plan must record completed local verification." >&2
+  exit 1
+fi
+
+for pending_intent_plan_contract in \
+  "status: completed" \
+  "## Status: Completed" \
+  "FLAG_UPDATE_CURRENT" \
+  "make build" \
+  "Four isolated hostile mutations were rejected" \
+  "Android/Wear and xcodebuild toolchains were unavailable" \
+  "No Android/Wear emulator or device"; do
+  if ! grep -Fq "$pending_intent_plan_contract" "$WEAR_PENDING_INTENT_PLAN"; then
+    printf '%s\n' "Wear PendingIntent plan must record completed verification: $pending_intent_plan_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "notification intents refresh their tweet extra" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "notification PendingIntents should update" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "notification PendingIntents refresh" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "Refreshed reused Wear notification PendingIntent extras" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "notification PendingIntents must refresh" "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "Wear PendingIntent refresh documentation must remain synchronized." >&2
   exit 1
 fi
 
