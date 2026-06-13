@@ -23,6 +23,8 @@ Priority:
 
 Current baseline:
 
+- Make verification resolves repository paths independently of the caller's
+  working directory.
 - `scripts/check-baseline.sh` verifies that iOS Fabric run scripts read
   `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
   of committed identifiers.

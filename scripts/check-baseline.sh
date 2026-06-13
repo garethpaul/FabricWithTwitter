@@ -21,6 +21,7 @@ WEAR_PAYLOAD_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-message-payload-li
 SAMPLE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-cross-platform-sample-verification.md"
 WEAR_STRICT_UTF8_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-strict-utf8-decoding.md"
 WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md"
+LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-independent-make.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -75,6 +76,7 @@ for path in \
   "docs/plans/2026-06-13-cross-platform-sample-verification.md" \
   "docs/plans/2026-06-13-wear-strict-utf8-decoding.md" \
   "docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md" \
+  "docs/plans/2026-06-13-location-independent-make.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -82,6 +84,26 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" ||
+  ! grep -Fq '"$(ROOT)/scripts/check-baseline.sh"' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Makefile verification must resolve the checker from the loaded Makefile." >&2
+  exit 1
+fi
+
+if ! grep -Fq "status: completed" "$LOCATION_INDEPENDENT_MAKE_PLAN" ||
+  ! grep -Fq "from /tmp" "$LOCATION_INDEPENDENT_MAKE_PLAN"; then
+  printf '%s\n' "Location-independent Fabric sample plan must record completed external verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "absolute Makefile path" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "Make verification resolves repository paths" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "External baseline" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "Made Make verification independent" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project guidance must document location-independent verification." >&2
+  exit 1
+fi
 
 if [ "$(grep -Fc 'PendingIntent.getActivity(this, 0, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT)' "$WEAR_LISTENER")" -ne 1 ] ||
   grep -Fq 'PendingIntent.getActivity(this, 0, viewIntent, 0)' "$WEAR_LISTENER" ||

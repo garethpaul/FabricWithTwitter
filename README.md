@@ -137,6 +137,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make check` before pushing changes to Android manifests, Xcode project
   files, Fabric/Twitter integration, or credential handling.
+- The full gate can run through an absolute Makefile path from another working
+  directory: `make -f /path/to/FabricWithTwitter/Makefile check`.
 - Android display, mobile, and wear samples keep `android:allowBackup="false"`
   so app data is not opted into platform backup by default.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.

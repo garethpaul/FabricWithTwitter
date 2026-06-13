@@ -2,6 +2,7 @@
 
 ## 2026-06-13
 
+- Made Make verification independent of the caller's working directory.
 - Refreshed reused Wear notification PendingIntent extras so later taps open
   the latest validated tweet text instead of stale content.
 - Reject malformed or unmappable Wear UTF-8 payloads before notification state

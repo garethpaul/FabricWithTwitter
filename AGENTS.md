@@ -19,6 +19,7 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   environments documented by each sample; no current one-command install is
   available.
 - Full baseline: `make check`
+- External baseline: `make -f /absolute/path/to/Makefile check`
 - Lint/static checks: `make lint`
 - Tests: `make test`
 - Build: `make build`

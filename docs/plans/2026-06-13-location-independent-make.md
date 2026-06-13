@@ -2,7 +2,7 @@
 title: Location-Independent Fabric Sample Verification
 type: reliability
 date: 2026-06-13
-status: in progress
+status: completed
 execution: code
 ---
 
@@ -32,3 +32,15 @@ cross-platform baseline works outside the repository directory.
 ## Non-Goals
 
 - Claiming Android, Wear, iOS, watchOS, Fabric, or Twitter runtime execution.
+
+## Verification
+
+- `make check`, `make lint`, `make test`, and `make build` passed the complete
+  portable cross-platform baseline at repository root and from /tmp through the
+  absolute Makefile path.
+- Four hostile root, checker-path, documentation, and completed-plan mutations
+  were rejected.
+- Shell syntax, plist/XML, diff, exact-path, secret/signing, and artifact checks
+  passed.
+- Android, Wear, Xcode, signing, Fabric/Twitter authentication, and device
+  behavior were unavailable and are not claimed.
