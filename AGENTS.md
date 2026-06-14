@@ -55,6 +55,10 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   replacing visible rows.
 - CI must remain read-only, credential-free, pinned to immutable actions, and
   capable of parsing both Xcode projects on macOS.
+- Use `docs/manual-sample-verification.md` for runtime claims. Preserve its
+  per-sample results, fixed public-content warning, Wear UTF-8/1024-byte and
+  component boundaries, unsafe iOS permalink limitation, no-force-crash rule,
+  cleanup, redaction, and unexecuted Linux status.
 
 ## Agent workflow
 

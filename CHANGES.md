@@ -4,6 +4,9 @@
 
 - Bounded Wear tweet messages to 1024 UTF-8 bytes before mobile transport and
   listener decoding.
+- Added a truthful per-sample Android, Wear, iOS, and watchOS verification matrix
+  with privacy, legacy-service, unsafe permalink, destructive crash, cleanup,
+  and redacted-evidence boundaries; the Linux session did not execute it.
 
 ## 2026-06-12
 

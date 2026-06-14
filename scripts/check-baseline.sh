@@ -18,6 +18,8 @@ CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-boundary.md"
 WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service-export-contract.md"
 WEAR_PAYLOAD_LIMIT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-message-payload-limit.md"
+SAMPLE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-cross-platform-sample-verification.md"
+SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
@@ -56,6 +58,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
+  "docs/manual-sample-verification.md" \
   "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
   "docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md" \
   "docs/plans/2026-06-09-wear-login-button-guard.md" \
@@ -67,6 +70,7 @@ for path in \
   "docs/plans/2026-06-12-wear-notification-activity-boundary.md" \
   "docs/plans/2026-06-12-wear-listener-service-export-contract.md" \
   "docs/plans/2026-06-13-wear-message-payload-limit.md" \
+  "docs/plans/2026-06-13-cross-platform-sample-verification.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -585,6 +589,128 @@ fi
 
 if ! grep -Fq "make check" "$CI_PLAN"; then
   printf '%s\n' "CI baseline plan must record make check verification." >&2
+  exit 1
+fi
+
+python3 - "$SAMPLE_VERIFICATION" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+required_sections = {
+    "Status And Evidence Boundary": [
+        "was not executed during the Linux maintenance session",
+        "Static Linux checks and hosted Xcode project listing do not prove",
+        "pass/fail/blocked result for every sample",
+        "owned by the tester or explicitly authorized for testing",
+    ],
+    "Toolchain And Global Prerequisites": [
+        "Android Studio, Gradle, Android SDK, Google Play Services, Xcode, Swift, iOS, watchOS",
+        "manifest API keys as empty placeholders",
+        "Twitter key/secret constants are also empty in checked-in Java source",
+        "keep the source change uncommitted",
+        "fixed public tweet IDs",
+        "do not copy, screenshot, publish, or retain it as evidence",
+        "mark dependent steps blocked",
+    ],
+    "Android DisplayTweets": [
+        "build/install the debug app",
+        "authorized uncommitted fixture/local credential injection",
+        "fixed-ID tweets render as compact tweet views",
+        "Loaded tweet for display",
+        "Tweet load failed",
+        "no tweet object, ID/text, username, token, credential, or raw Twitter exception",
+        "app-data backup remains disabled",
+    ],
+    "Android Wear Mobile": [
+        "missing login button or tweet container fails safely",
+        "authorized uncommitted fixture/local credential injection",
+        "login control hides only after success",
+        "null, missing, empty, and whitespace-only tweet text",
+        "UTF-8 encoded",
+        "`/new_tweet` path",
+        "over 1024 UTF-8 bytes are rejected before transport",
+    ],
+    "Wear Listener And Notification": [
+        "`com.google.android.gms.wearable.BIND_LISTENER` action",
+        "notification detail activity remains internal-only",
+        "decodes UTF-8",
+        "unexpected path",
+        "payload over 1024 bytes",
+        "removes its message listener",
+    ],
+    "iOS TableViewTweetsSwift": [
+        "overlapping loads are suppressed",
+        "remain set after guest-login success while tweet loading continues",
+        "reset on guest-login failure or tweet-load completion",
+        "only typed `TWTRTweet` objects",
+        "generic diagnostics",
+        "known unsafe legacy boundary",
+        "without HTTPS/host/userinfo validation",
+        "Do not use untrusted fixture URLs or claim navigation is hardened.",
+    ],
+    "iOS WatchSample": [
+        "placeholder Crashlytics demonstration",
+        "Do not invoke the `ForceCrash` action",
+        "`Crashlytics.sharedInstance().crash()` intentionally",
+        "destructive",
+    ],
+    "Failure, Privacy, And Cleanup": [
+        "Keep every failure generic",
+        "Do not weaken empty Android manifest placeholders",
+        "UTF-8 validation",
+        "1024-byte message limit",
+        "Rotate any credential",
+    ],
+    "Evidence Record": [
+        "commit SHA",
+        "pass/fail/blocked result",
+        "Record skipped steps and exact blockers explicitly.",
+        "scrubbed of keys/tokens",
+        "four separate evidence classes",
+    ],
+}
+
+sections = {}
+current = None
+for line in source.splitlines():
+    if line.startswith("## "):
+        current = line[3:]
+        sections[current] = []
+    elif current is not None:
+        sections[current].append(line)
+
+for heading, phrases in required_sections.items():
+    body = "\n".join(sections.get(heading, []))
+    if not body:
+        raise SystemExit("Sample verification section missing: " + heading)
+    normalized_body = " ".join(body.split())
+    for phrase in phrases:
+        if " ".join(phrase.split()) not in normalized_body:
+            raise SystemExit(
+                "Sample verification assertion missing from "
+                + heading
+                + ": "
+                + phrase
+            )
+PY
+
+if ! grep -Fq "status: completed" "$SAMPLE_VERIFICATION_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$SAMPLE_VERIFICATION_PLAN" ||
+  ! grep -Fq "verification matrix remains unexecuted" "$SAMPLE_VERIFICATION_PLAN" ||
+  ! grep -Fq "bounded exact-head configured-event/CodeQL snapshot" "$SAMPLE_VERIFICATION_PLAN"; then
+  printf '%s\n' "Cross-platform sample verification plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "docs/manual-sample-verification.md" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "docs/manual-sample-verification.md" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "docs/manual-sample-verification.md" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "without claiming that the matrix has been executed" "$ROOT_DIR/VISION.md" ||
+  grep -Fq "Add clearer build and verification notes for each sample app" "$ROOT_DIR/VISION.md" ||
+  grep -Fq "Add small checks or manual steps for login/display behavior" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "truthful per-sample Android, Wear, iOS, and watchOS verification matrix" "$ROOT_DIR/CHANGES.md"; then
+  printf '%s\n' "Project guidance must preserve truthful per-sample verification boundaries." >&2
   exit 1
 fi
 
