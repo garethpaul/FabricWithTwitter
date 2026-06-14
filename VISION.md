@@ -46,6 +46,8 @@ Current baseline:
   setting tweet text.
 - The Wear notification detail activity is internal-only and has no launcher
   intent filter; explicit app notifications remain its only entry path.
+- The Wear listener service declares its required system-binding export
+  explicitly and limits its filter to the single Wear binding action.
 - Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
   platform default charsets.
 - Wear listener diagnostics do not include raw incoming message paths.
@@ -57,6 +59,8 @@ Current baseline:
   static checks remain the minimum verification path.
 - GitHub Actions runs the local `make check` baseline on macOS for pushes and
   pull requests, including both Xcode project-listing checks.
+- Hosted checkout credentials are not persisted and actions remain pinned to
+  immutable revisions.
 
 Next priorities:
 
@@ -71,6 +75,8 @@ Contribution rules:
 - Do not mix SDK migration with UI or behavior changes unless required.
 - Keep credential placeholders empty in committed source.
 - Preserve Android backup opt-out when changing sample manifests.
+- Preserve the exact Wear listener export and single binding-action contract
+  when changing the wearable manifest.
 - Preserve Wear mobile login button lifecycle guards when changing the legacy
   Twitter login flow.
 - Preserve Wear mobile tweet display container guards when changing legacy

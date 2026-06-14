@@ -5,9 +5,12 @@
 
 ## Overview
 
-`garethpaul/FabricWithTwitter` is an Apple platform application or Objective-C/Swift sample. A simple application that showcases how to integrate Fabric with Twitter
+`garethpaul/FabricWithTwitter` contains legacy Android, Wear, iOS, and watchOS
+samples showing how the retired Fabric and TwitterKit SDKs were integrated.
 
-This README is based on the checked-in source, manifests, scripts, and repository metadata on the `master` branch. The project language mix found during review was: C/C++ headers (43), Swift (9), Java (6).
+This README is based on the checked-in source, manifests, scripts, and
+repository metadata on the `master` branch. The repository mixes Java, Swift,
+Gradle, Xcode projects, shell verification, and vendored historical frameworks.
 
 ## Repository Contents
 
@@ -21,8 +24,8 @@ This README is based on the checked-in source, manifests, scripts, and repositor
 Additional scan context:
 
 - Source directories: Android, iOS
-- Dependency and build manifests: none detected
-- Entry points or build surfaces: Gradle build files
+- Dependency and build manifests: Android Gradle projects and iOS Xcode projects
+- Entry points or build surfaces: Gradle build files and `.xcodeproj` files
 - Test-looking files: Android/DisplayTweets/app/src/androidTest/java/sample/twitterkit/fabric/twitter/com/twitterkit/ApplicationTest.java, Android/WearExample/mobile/src/androidTest/java/samples/twitterkit/fabric/twitter/com/wearexample/ApplicationTest.java, iOS/TableViewTweetsSwift/TableViewTweetsSwiftTests/Info.plist, iOS/TableViewTweetsSwift/TableViewTweetsSwiftTests/TableViewTweetsSwiftTests.swift, iOS/WatchSample/WatchSampleTests/Info.plist, iOS/WatchSample/WatchSampleTests/WatchSampleTests.swift
 
 ## Getting Started
@@ -65,15 +68,17 @@ raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
 is skipped before sending and display, Wear notification display targets are
 checked before setting tweet text, the notification detail activity is
-internal-only and has no launcher filter, Wear mobile login button handling is
-null-safe, Wear mobile tweet display verifies that its container view exists
-before adding a `TweetView`, local credential files stay ignored, and Xcode
-project listing is attempted when `xcodebuild` is installed.
+internal-only and has no launcher filter, the Wear listener is explicitly
+exported only for the system's `BIND_LISTENER` action, Wear mobile login button
+handling is null-safe, Wear mobile tweet display verifies that its container
+view exists before adding a `TweetView`, local credential files stay ignored,
+and Xcode project listing is attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
 GitHub Actions runs this same `make check` baseline on macOS for pushes and
-pull requests, including Xcode project parsing without requiring credentials.
+pull requests, including Xcode project parsing without requiring credentials
+or persisting checkout credentials.
 
 For functional verification, use Android Studio/Gradle and Xcode's test action
 or `xcodebuild test` with the appropriate scheme and destination.
@@ -94,6 +99,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
+- The Wear listener service is explicitly exported only for Google Play
+  Services binding and exposes only the Wear `BIND_LISTENER` action.
 - The Android Wear mobile sample forwards Twitter login activity results only
   when the login button view was initialized.
 - The Android Wear mobile sample verifies that the tweet display container

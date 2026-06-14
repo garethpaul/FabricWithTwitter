@@ -12,12 +12,15 @@ for pushes and pull requests.
 
 - Added a least-privilege GitHub Actions workflow that runs `make check` on a
   fixed macOS image so both Xcode projects are parsed in hosted validation.
-- Pinned the checkout action by commit, bounded the job with a timeout, and
-  enabled cancellation of superseded runs.
-- Extended the baseline script and documentation so the hosted CI path stays
-  visible and covered by local verification.
+- Pinned checkout by commit, disabled persisted checkout credentials, bounded
+  the job with a timeout, and enabled cancellation of superseded runs.
+- Added focused baseline checks for unrestricted pull requests, the master
+  push trigger, read-only permissions, immutable actions, and the exact Make
+  verification command.
+- Extended the documentation so the hosted CI path stays visible.
 
 ## Verification
 
 - `make check`
+- `git diff --check`
 - Hosted `macos-15` GitHub Actions run

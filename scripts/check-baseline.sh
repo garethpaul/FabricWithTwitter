@@ -16,7 +16,9 @@ ANDROID_BACKUP_PLAN="$ROOT_DIR/docs/plans/2026-06-09-android-backup-opt-out.md"
 WEAR_TWEET_VIEW_PLAN="$ROOT_DIR/docs/plans/2026-06-09-wear-tweet-view-container-guard.md"
 CI_PLAN="$ROOT_DIR/docs/plans/2026-06-10-ci-baseline.md"
 WEAR_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-notification-activity-boundary.md"
+WEAR_LISTENER_EXPORT_PLAN="$ROOT_DIR/docs/plans/2026-06-12-wear-listener-service-export-contract.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
+CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
@@ -35,6 +37,7 @@ require_file() {
 
 for path in \
   ".gitignore" \
+  ".github/CODEOWNERS" \
   ".github/workflows/check.yml" \
   "CHANGES.md" \
   "Makefile" \
@@ -61,6 +64,7 @@ for path in \
   "docs/plans/2026-06-09-twitter-display-log-boundary.md" \
   "docs/plans/2026-06-10-ci-baseline.md" \
   "docs/plans/2026-06-12-wear-notification-activity-boundary.md" \
+  "docs/plans/2026-06-12-wear-listener-service-export-contract.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -123,6 +127,29 @@ if notification.get(android + "exported") != "false":
     raise SystemExit("Wear NotificationActivity must remain non-exported.")
 if notification.findall("intent-filter"):
     raise SystemExit("Wear NotificationActivity must not expose an intent filter.")
+
+services = [
+    service
+    for service in manifest.findall("./application/service")
+    if service.get(android + "name") == ".ListenerService"
+]
+if len(services) != 1:
+    raise SystemExit("Wear ListenerService must remain declared exactly once.")
+
+listener = services[0]
+if listener.get(android + "exported") != "true":
+    raise SystemExit("Wear ListenerService must remain explicitly exported for system binding.")
+
+filters = listener.findall("intent-filter")
+if len(filters) != 1:
+    raise SystemExit("Wear ListenerService must retain exactly one intent filter.")
+
+listener_filter = filters[0]
+actions = [action.get(android + "name") for action in listener_filter.findall("action")]
+if actions != ["com.google.android.gms.wearable.BIND_LISTENER"]:
+    raise SystemExit("Wear ListenerService must expose only the Wear binding action.")
+if listener_filter.findall("category") or listener_filter.findall("data"):
+    raise SystemExit("Wear ListenerService binding filter must not add categories or data selectors.")
 PY
 
 if ! grep -Fq ".env" "$ROOT_DIR/.gitignore" ||
@@ -272,14 +299,74 @@ else
   printf '%s\n' "Skipping xcodebuild project listing: xcodebuild is not installed."
 fi
 
-if ! grep -Fq "workflow_dispatch:" "$CI_WORKFLOW" ||
-  ! grep -Fq "contents: read" "$CI_WORKFLOW" ||
-  ! grep -Fq "cancel-in-progress: true" "$CI_WORKFLOW" ||
-  ! grep -Fq "runs-on: macos-15" "$CI_WORKFLOW" ||
-  ! grep -Fq "timeout-minutes: 10" "$CI_WORKFLOW" ||
-  ! grep -Fq "actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10" "$CI_WORKFLOW" ||
-  ! grep -Fq "run: make check" "$CI_WORKFLOW"; then
-  printf '%s\n' "GitHub Actions workflow must keep the bounded, least-privilege macOS check contract." >&2
+workflow_paths=$(find "$ROOT_DIR/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) -print | LC_ALL=C sort)
+if [ "$workflow_paths" != "$CI_WORKFLOW" ]; then
+  printf '%s\n' "The reviewed check workflow must be the only GitHub Actions workflow." >&2
+  exit 1
+fi
+
+codeowner_rules=$(grep -Ev '^[[:space:]]*(#|$)' "$CODEOWNERS" 2>/dev/null || true)
+if [ "$codeowner_rules" != '* @garethpaul' ]; then
+  printf '%s\n' "CODEOWNERS must retain repository-wide ownership." >&2
+  exit 1
+fi
+
+if grep -E '^[[:space:]]*(-[[:space:]]+)?uses:' "$CI_WORKFLOW" | grep -Ev '@[0-9a-f]{40}([[:space:]]+#.*)?$' >/dev/null; then
+  printf '%s\n' "GitHub Actions must use immutable commit revisions." >&2
+  exit 1
+fi
+
+workflow_uses=$(grep -E '^[[:space:]]*(-[[:space:]]+)?uses:' "$CI_WORKFLOW" | sed -E 's/^[[:space:]]*(-[[:space:]]+)?//')
+if [ "$workflow_uses" != 'uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3' ]; then
+  printf '%s\n' "GitHub Actions must use only the reviewed checkout action." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^permissions:$' "$CI_WORKFLOW")" -ne 1 ] ||
+  [ "$(grep -Ec '^  contents: read$' "$CI_WORKFLOW")" -ne 1 ] ||
+  grep -Eq 'write-all|contents:[[:space:]]*write|pull-requests:[[:space:]]*write|actions:[[:space:]]*write' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions permissions must remain globally read-only." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 1 ] ||
+  ! grep -Eq '^[[:space:]]*run: make check[[:space:]]*$' "$CI_WORKFLOW" ||
+  grep -Eq 'continue-on-error:[[:space:]]*true|if:[[:space:]]*false' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions must run exactly the required Make gate without bypasses." >&2
+  exit 1
+fi
+
+if [ "$(grep -Ec '^[[:space:]]*persist-credentials: false$' "$CI_WORKFLOW")" -ne 1 ] ||
+  grep -Eq '^[[:space:]]*persist-credentials: true$' "$CI_WORKFLOW"; then
+  printf '%s\n' "GitHub Actions checkout credentials must not persist." >&2
+  exit 1
+fi
+
+for workflow_contract in \
+  'push:' \
+  'branches:' \
+  '- master' \
+  'pull_request:' \
+  'workflow_dispatch:' \
+  'contents: read' \
+  'cancel-in-progress: true' \
+  'runs-on: macos-15' \
+  'timeout-minutes: 10' \
+  'persist-credentials: false'; do
+  if ! grep -Fq -- "$workflow_contract" "$CI_WORKFLOW"; then
+    printf '%s\n' "GitHub Actions workflow must keep contract: $workflow_contract" >&2
+    exit 1
+  fi
+done
+
+if ! awk '
+  /^  pull_request:$/ {
+    found = 1
+    if (getline <= 0 || $0 != "  push:") exit 1
+  }
+  END { if (!found) exit 1 }
+' "$CI_WORKFLOW"; then
+  printf '%s\n' "Pull request verification must apply without branch restrictions." >&2
   exit 1
 fi
 
@@ -290,7 +377,6 @@ if ! grep -Fq "GitHub Actions" "$ROOT_DIR/SECURITY.md" ||
   printf '%s\n' "Project docs must record the GitHub Actions CI baseline." >&2
   exit 1
 fi
-
 if ! grep -Fq "status: completed" "$PLAN"; then
   printf '%s\n' "Plan must be marked completed." >&2
   exit 1
@@ -382,6 +468,30 @@ if ! grep -Fq "Status: Completed" "$WEAR_ACTIVITY_PLAN" ||
   printf '%s\n' "Wear notification activity plan must remain completed with hosted verification recorded." >&2
   exit 1
 fi
+
+python3 - "$WEAR_LISTENER_EXPORT_PLAN" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+plan = Path(sys.argv[1]).read_text()
+statuses = re.findall(r"^status: .+$", plan, flags=re.MULTILINE)
+verification = plan.split("## Verification Completed\n", 1)[-1]
+required = (
+    "Pull-request run `27408397355` passed",
+    "CodeQL run `27408395236` passed",
+    "`refs/pull/1/head` had zero open code-scanning alerts",
+)
+
+if (
+    statuses != ["status: completed"]
+    or any(item not in verification for item in required)
+    or re.search(r"\b(?:pending|todo|tbd|not run)\b", verification, re.IGNORECASE)
+):
+    raise SystemExit(
+        "Wear listener export plan must remain completed with actual hosted verification recorded."
+    )
+PY
 
 if ! grep -Fq "make check" "$WEAR_TWEET_VIEW_PLAN"; then
   printf '%s\n' "Wear tweet view container guard plan must record make check verification." >&2
