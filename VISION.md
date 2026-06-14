@@ -74,7 +74,8 @@ Current baseline:
 
 Next priorities:
 
-- Replace dynamic dependencies with reproducible versions if the sample is revived
+- Preserve the Android legacy dependency pins while planning a separately
+  verified replacement for the retired toolchain
 - Document modern alternatives to Fabric/TwitterKit
 - Add executable login, display, Wear transport, and lifecycle tests after the
   retired dependencies can be isolated or replaced

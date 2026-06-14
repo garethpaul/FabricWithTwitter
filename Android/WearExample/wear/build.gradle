@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'io.fabric.tools:gradle:1.+'
+        classpath 'io.fabric.tools:gradle:1.14.4'
     }
 }
 apply plugin: 'com.android.application'
@@ -35,7 +35,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:support-v4:20.0.+"
+    compile "com.android.support:support-v4:20.0.0"
     compile 'com.google.android.support:wearable:1.0.0'
     compile 'com.google.android.gms:play-services-wearable:6.1.71'
     compile('com.twitter.sdk.android:twitter:1.1.0@aar') {

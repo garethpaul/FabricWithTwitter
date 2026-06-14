@@ -22,10 +22,14 @@ SAMPLE_VERIFICATION_PLAN="$ROOT_DIR/docs/plans/2026-06-13-cross-platform-sample-
 WEAR_STRICT_UTF8_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-strict-utf8-decoding.md"
 WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-independent-make.md"
+DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-pins.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
+DISPLAY_APP_BUILD="$ROOT_DIR/Android/DisplayTweets/app/build.gradle"
+WEAR_MOBILE_BUILD="$ROOT_DIR/Android/WearExample/mobile/build.gradle"
+WEAR_APP_BUILD="$ROOT_DIR/Android/WearExample/wear/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
 WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
@@ -51,11 +55,14 @@ for path in \
   "SECURITY.md" \
   "VISION.md" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
+  "Android/DisplayTweets/app/build.gradle" \
   "Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java" \
   "Android/WearExample/build.gradle" \
+  "Android/WearExample/mobile/build.gradle" \
   "Android/WearExample/mobile/src/main/AndroidManifest.xml" \
   "Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java" \
   "Android/WearExample/wear/src/main/AndroidManifest.xml" \
+  "Android/WearExample/wear/build.gradle" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
@@ -77,6 +84,7 @@ for path in \
   "docs/plans/2026-06-13-wear-strict-utf8-decoding.md" \
   "docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md" \
   "docs/plans/2026-06-13-location-independent-make.md" \
+  "docs/plans/2026-06-14-legacy-android-dependency-pins.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -203,6 +211,42 @@ if ! grep -Fq "https://dl.google.com/dl/android/maven2" "$WEAR_BUILD"; then
   printf '%s\n' "WearExample build must include Google Maven for legacy wearable artifacts." >&2
   exit 1
 fi
+
+python3 - "$DISPLAY_APP_BUILD" "$WEAR_MOBILE_BUILD" "$WEAR_APP_BUILD" "$ROOT_DIR/Android" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+paths = [Path(value) for value in sys.argv[1:4]]
+android_root = Path(sys.argv[4])
+sources = {path: path.read_text(encoding="utf-8") for path in paths}
+coordinate = re.compile(r"(?:classpath|compile)\s*\(?\s*[\"']([^\"']+)[\"']")
+for path in sorted(android_root.rglob("build.gradle")):
+    source = path.read_text(encoding="utf-8")
+    for value in coordinate.findall(source):
+        parts = value.split(":")
+        if len(parts) < 3:
+            continue
+        version = parts[-1].strip().lower()
+        if "+" in version or "latest" in version or version.startswith("[") or version.startswith("("):
+            raise SystemExit("Dynamic Android dependency selector remains in %s" % path)
+
+display = sources[paths[0]]
+mobile = sources[paths[1]]
+wear = sources[paths[2]]
+if display.count("io.fabric.tools:gradle:1.14.4") != 1:
+    raise SystemExit("DisplayTweets must pin the Fabric Gradle plugin to 1.14.4")
+if mobile.count("io.fabric.tools:gradle:1.14.4") != 1 or wear.count("io.fabric.tools:gradle:1.14.4") != 1:
+    raise SystemExit("Both Wear modules must pin the Fabric Gradle plugin to 1.14.4")
+if mobile.count("com.google.android.gms:play-services-wearable:6.1.71") != 1:
+    raise SystemExit("Wear mobile must pin the wearable-only Play Services artifact to 6.1.71")
+if "com.google.android.gms:play-services:" in mobile:
+    raise SystemExit("Wear mobile must not restore the full Play Services bundle")
+if wear.count("com.google.android.gms:play-services-wearable:6.1.71") != 1:
+    raise SystemExit("Wear app must retain Play Services wearable 6.1.71")
+if wear.count("com.android.support:support-v4:20.0.0") != 1:
+    raise SystemExit("Wear app must pin support-v4 to 20.0.0")
+PY
 
 if ! grep -Fq "path == null || tweetText == null || messageClient == null" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "tweet == null || tweet.text == null || tweet.text.trim().length() == 0" "$WEAR_MOBILE_ACTIVITY" ||
@@ -417,6 +461,20 @@ if ! grep -Fq "scripts/check-baseline.sh" "$ROOT_DIR/VISION.md" ||
   printf '%s\n' "VISION must describe current Android and iOS credential guardrails." >&2
   exit 1
 fi
+
+if ! grep -Fq "status: completed" "$DEPENDENCY_PIN_PLAN" ||
+  ! grep -Fq "make check" "$DEPENDENCY_PIN_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$DEPENDENCY_PIN_PLAN"; then
+  printf '%s\n' "Legacy Android dependency pin plan must record completed verification." >&2
+  exit 1
+fi
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md"; do
+  if ! grep -Fq "legacy dependency pins" "$document"; then
+    printf '%s\n' "$document must document the legacy dependency pins." >&2
+    exit 1
+  fi
+done
 
 if command -v xcodebuild >/dev/null 2>&1; then
   xcodebuild -list -project "$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj" >/dev/null

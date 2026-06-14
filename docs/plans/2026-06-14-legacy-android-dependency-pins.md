@@ -1,7 +1,7 @@
 ---
 title: Legacy Android Dependency Pins
 type: supply-chain
-status: planned
+status: completed
 date: 2026-06-14
 ---
 
@@ -43,13 +43,21 @@ Google Play Services artifact.
 - Claiming that pinned legacy dependencies are secure or currently supported.
 - Running Fabric uploads, Twitter login, Wear transport, or signed app builds.
 
-## Planned Verification
+## Verification
 
-- Run focused dynamic-selector and exact-version checks.
-- Run `make check` from the checkout and `/tmp`.
-- Reject isolated hostile mutations for each pin, dynamic selectors,
-  documentation, and completed-plan evidence.
-- Inspect exact intended paths, wrapper/project preservation, artifacts,
-  conflict markers, whitespace, and changed-line credential patterns.
-- Take one bounded exact-head hosted check and code-scanning snapshot after push;
-  do not poll pending jobs.
+- Focused dynamic-selector and exact-version checks passed.
+- Seven isolated hostile mutations were rejected for the Fabric plugin pin,
+  support-v4 pin, wearable Play Services pin, full-bundle restoration, dynamic
+  selector restoration, documentation, and completed-plan evidence.
+- `make check` passed from the checkout and with the repository Makefile
+  invoked from `/tmp`; both runs truthfully skipped Xcode project listing
+  because `xcodebuild` is unavailable on this Linux host.
+- A bounded Gradle 2.1 offline dependency probe reached project configuration
+  but could not resolve the uncached Android Gradle plugin `0.13.2`. The static
+  contract and local artifact cache verify the selected pins without claiming
+  an Android build that this host cannot perform.
+- Exact intended-path, wrapper/project preservation, generated-artifact,
+  conflict-marker, whitespace, and changed-line credential-pattern audits
+  passed before commit.
+- One bounded exact-head hosted check and code-scanning snapshot is required
+  after push; pending jobs will not be polled.

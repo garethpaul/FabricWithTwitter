@@ -47,6 +47,8 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Use Android Studio to open the project or run `gradle assembleDebug` when the Android SDK is configured.
+- Android legacy dependency pins remove dynamic selectors while preserving the
+  original Gradle, SDK, Fabric, TwitterKit, and Wear API generations.
 - Open the Xcode project or workspace in Xcode and run the matching app/sample scheme.
 - Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in local Gradle/Xcode
   environment settings when exercising Fabric upload behavior. The checked-in

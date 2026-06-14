@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-14
+
+- Added Android legacy dependency pins for the Fabric plugin, support-v4, and
+  wearable-only Google Play Services artifacts.
+
 ## 2026-06-13
 
 - Made Make verification independent of the caller's working directory.
