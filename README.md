@@ -97,6 +97,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
+- Wear tweet messages reject UTF-8 payloads over 1024 bytes before transport or
+  listener decoding.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
 - The Wear listener service is explicitly exported only for Google Play
@@ -133,6 +135,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - See `VISION.md` for project direction and contribution guardrails.
 - See `docs/plans/2026-06-09-wear-tweet-payload-guard.md` for the Wear tweet
   payload guard.
+- See `docs/plans/2026-06-13-wear-message-payload-limit.md` for the cross-device
+  tweet payload byte limit.
 - See `docs/plans/2026-06-09-wear-login-button-guard.md` for the Wear mobile
   Twitter login button lifecycle guard.
 - See `docs/plans/2026-06-09-wear-notification-text-view-guard.md` for the Wear

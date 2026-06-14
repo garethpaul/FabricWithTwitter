@@ -43,6 +43,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private static final String TWITTER_KEY = "";
     private static final String TWITTER_SECRET = "";
     private static final Charset UTF_8 = Charset.forName("UTF-8");
+    private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;
 
 
     @Override
@@ -136,6 +137,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             Log.d(TAG, "Skipping wear message without tweet text");
             return;
         }
+        final byte[] tweetPayload = safeTweetText.getBytes(UTF_8);
+        if (tweetPayload.length > MAX_TWEET_PAYLOAD_BYTES) {
+            Log.d(TAG, "Skipping oversized wear tweet payload");
+            return;
+        }
 
         new Thread(new Runnable() {
             @Override
@@ -148,7 +154,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(messageClient).await();
                 for (Node node : nodes.getNodes()) {
                     MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                            messageClient, node.getId(), path, safeTweetText.getBytes(UTF_8)).await();
+                            messageClient, node.getId(), path, tweetPayload).await();
                 }
             }
         }).start();

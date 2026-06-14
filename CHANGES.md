@@ -1,5 +1,10 @@
 # Changes
 
+## 2026-06-13
+
+- Bounded Wear tweet messages to 1024 UTF-8 bytes before mobile transport and
+  listener decoding.
+
 ## 2026-06-12
 
 - Declared the Wear listener service export explicitly for required Google Play
