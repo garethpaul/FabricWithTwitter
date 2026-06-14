@@ -2,6 +2,8 @@
 
 ## 2026-06-14
 
+- Validated each selected iOS tweet as a credential-free HTTPS permalink with a
+  host before constructing the web request.
 - Added Android legacy dependency pins for the Fabric plugin, support-v4, and
   wearable-only Google Play Services artifacts.
 - Removed redundant Wear message-listener registration so the framework-managed
@@ -17,7 +19,7 @@
 - Bounded Wear tweet messages to 1024 UTF-8 bytes before mobile transport and
   listener decoding.
 - Added a truthful per-sample Android, Wear, iOS, and watchOS verification matrix
-  with privacy, legacy-service, unsafe permalink, destructive crash, cleanup,
+  with privacy, legacy-service, permalink, destructive crash, cleanup,
   and redacted-evidence boundaries; the Linux session did not execute it.
 
 ## 2026-06-12

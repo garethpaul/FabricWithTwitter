@@ -124,6 +124,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   blocked.
 - The iOS TableView sample type-checks loaded TwitterKit objects and replaces
   visible rows atomically so malformed responses cannot crash or duplicate rows.
+- The iOS TableView sample requires a credential-free HTTPS permalink with a
+  non-empty host before opening a selected tweet.
 
 ## Security and Privacy Notes
 

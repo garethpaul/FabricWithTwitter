@@ -6,6 +6,22 @@
 import UIKit
 import TwitterKit
 
+func validatedTweetPermalink(url: NSURL?) -> NSURL? {
+    if let candidate = url {
+        if candidate.scheme?.lowercaseString == "https" &&
+            candidate.user == nil &&
+            candidate.password == nil {
+            if let host = candidate.host {
+                if !host.isEmpty {
+                    return candidate
+                }
+            }
+        }
+    }
+
+    return nil
+}
+
 class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
     // setup a 'container' for Tweets
@@ -97,12 +113,16 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
     // MARK: TWTRTweetViewDelegate
     func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!) {
-        // Display a Web View when selecting the Tweet.
-        let webViewController = UIViewController()
-        let webView = UIWebView(frame: webViewController.view.bounds)
-        webView.loadRequest(NSURLRequest(URL: tweet.permalink))
-        webViewController.view = webView
-        self.navigationController?.pushViewController(webViewController, animated: true)
+        if let permalink = validatedTweetPermalink(tweet?.permalink) {
+            // Display a Web View only for a validated Tweet permalink.
+            let webViewController = UIViewController()
+            let webView = UIWebView(frame: webViewController.view.bounds)
+            webView.loadRequest(NSURLRequest(URL: permalink))
+            webViewController.view = webView
+            self.navigationController?.pushViewController(webViewController, animated: true)
+        } else {
+            println("Tweet permalink was rejected")
+        }
     }
 
     // MARK: UITableViewDataSource

@@ -24,6 +24,8 @@ WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pend
 LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-independent-make.md"
 DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-pins.md"
 WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
+IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
+IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -87,6 +89,8 @@ for path in \
   "docs/plans/2026-06-13-location-independent-make.md" \
   "docs/plans/2026-06-14-legacy-android-dependency-pins.md" \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
+  "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
+  "scripts/check-ios-tweet-permalink.py" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -94,6 +98,19 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+python3 "$IOS_TWEET_PERMALINK_CHECK" \
+  "$IOS_TABLE_VIEW" \
+  "$IOS_TWEET_PERMALINK_PLAN"
+
+if ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "Project guidance must preserve validated iOS tweet navigation." >&2
+  exit 1
+fi
 
 if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" ||
   ! grep -Fq '"$(ROOT)/scripts/check-baseline.sh"' "$ROOT_DIR/Makefile"; then
@@ -851,9 +868,10 @@ required_sections = {
         "reset on guest-login failure or tweet-load completion",
         "only typed `TWTRTweet` objects",
         "generic diagnostics",
-        "known unsafe legacy boundary",
-        "without HTTPS/host/userinfo validation",
-        "Do not use untrusted fixture URLs or claim navigation is hardened.",
+        "credential-free HTTPS permalink",
+        "HTTP, hostless, and credential-bearing permalinks",
+        "do not create a request or navigate",
+        "generic rejection message",
     ],
     "iOS WatchSample": [
         "placeholder Crashlytics demonstration",

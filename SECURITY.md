@@ -49,6 +49,8 @@ Helpful reports include:
   limited to the single `com.google.android.gms.wearable.BIND_LISTENER` action.
 - The Wear listener service should rely on its framework-managed callback and
   must not register a parallel `GoogleApiClient` message listener.
+- The iOS TableView sample should require a credential-free HTTPS permalink
+  with a non-empty host and no user information before creating a web request.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled

@@ -57,13 +57,15 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.
+- The iOS TableView sample must validate a credential-free HTTPS permalink with
+  a non-empty host before constructing a web request.
 - CI must remain read-only, credential-free, pinned to immutable actions, and
   capable of parsing both Xcode projects on macOS.
 - Preserve the Android legacy dependency pins; do not restore dynamic `+`,
   `latest`, or range selectors in Gradle declarations.
 - Use `docs/manual-sample-verification.md` for runtime claims. Preserve its
   per-sample results, fixed public-content warning, Wear UTF-8/1024-byte and
-  component boundaries, unsafe iOS permalink limitation, no-force-crash rule,
+  component boundaries, validated iOS permalink boundary, no-force-crash rule,
   cleanup, redaction, and unexecuted Linux status.
 
 ## Agent workflow

@@ -38,6 +38,8 @@ Current baseline:
   failure and tweet-load completion.
 - The iOS TableView sample type-checks loaded TwitterKit objects before
   replacing visible rows.
+- The iOS TableView sample validates a credential-free HTTPS permalink before
+  selected-tweet navigation.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container
@@ -71,8 +73,8 @@ Current baseline:
   immutable revisions.
 - A per-sample verification matrix now separates Android DisplayTweets, Wear
   mobile/listener, iOS TableView, and WatchSample build/runtime evidence,
-  privacy constraints, known unsafe/destructive paths, cleanup, and redaction
-  without claiming that the matrix has been executed.
+  privacy constraints, validated permalink/destructive paths, cleanup, and
+  redaction without claiming that the matrix has been executed.
 
 Next priorities:
 

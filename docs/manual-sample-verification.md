@@ -93,9 +93,10 @@ responses out of source control and evidence.
    start another load after completion.
 4. Exercise controlled login/load failures where possible. Confirm generic
    diagnostics with no raw errors, account details, tweet IDs/text, or objects.
-5. Treat tweet selection as a known unsafe legacy boundary: the current sample
-   loads `tweet.permalink` directly into `UIWebView` without HTTPS/host/userinfo
-   validation. Do not use untrusted fixture URLs or claim navigation is hardened.
+5. Select a controlled tweet with a credential-free HTTPS permalink and a
+   non-empty host; confirm the in-app web view navigates. With an authorized
+   local fixture, verify HTTP, hostless, and credential-bearing permalinks do
+   not create a request or navigate and log only the generic rejection message.
 
 ## iOS WatchSample
 
