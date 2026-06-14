@@ -26,6 +26,7 @@ DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-p
 WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
+IOS_TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-twitter-main-queue.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -91,6 +92,7 @@ for path in \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "scripts/check-ios-tweet-permalink.py" \
+  "docs/plans/2026-06-14-ios-twitter-main-queue.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -504,6 +506,49 @@ if ! grep -Fq "if let loadedTweetObjects = twttrs" "$IOS_TABLE_VIEW" ||
   printf '%s\n' "iOS loaded tweets must be type-checked before replacing table contents." >&2
   exit 1
 fi
+
+python3 - "$IOS_TABLE_VIEW" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+load = source.split("    func loadTweets()", 1)[1].split("    func refreshInvoked()", 1)[0]
+contracts = (
+    "logInGuestWithCompletion",
+    "dispatch_async(dispatch_get_main_queue())",
+    "if session == nil",
+    "self.isLoadingTweets = false",
+    "loadTweetsWithIDs(tweetIDs)",
+    "dispatch_async(dispatch_get_main_queue())",
+    "self.isLoadingTweets = false",
+    "if let loadedTweetObjects = twttrs",
+    "self.tweets = loadedTweets",
+)
+positions = []
+start = 0
+for contract in contracts:
+    position = load.find(contract, start)
+    positions.append(position)
+    start = position + len(contract) if position != -1 else start
+if -1 in positions:
+    raise SystemExit("iOS TwitterKit callback state and table publication must remain on the main queue")
+if load.count("dispatch_async(dispatch_get_main_queue())") != 2:
+    raise SystemExit("iOS Twitter loading must keep exactly two callback main-queue boundaries")
+PY
+
+if ! grep -Fq "status: completed" "$IOS_TWITTER_MAIN_QUEUE_PLAN" ||
+  ! grep -Fq "make check" "$IOS_TWITTER_MAIN_QUEUE_PLAN" ||
+  ! grep -Fq "hostile mutations were rejected" "$IOS_TWITTER_MAIN_QUEUE_PLAN"; then
+  printf '%s\n' "iOS Twitter main-queue plan must record completed verification." >&2
+  exit 1
+fi
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md"; do
+  if ! grep -Fq "on the main queue" "$document"; then
+    printf '%s\n' "$document must document iOS Twitter main-queue publication." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "make check" "$ROOT_DIR/README.md" ||
   ! grep -Fq "GitHub Actions" "$ROOT_DIR/README.md" ||

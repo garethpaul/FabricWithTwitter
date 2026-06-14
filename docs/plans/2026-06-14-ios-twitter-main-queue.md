@@ -2,7 +2,7 @@
 title: iOS Twitter Main Queue Publication
 type: reliability
 date: 2026-06-14
-status: in-progress
+status: completed
 execution: code
 ---
 
@@ -39,4 +39,14 @@ failure diagnostics, and typed tweet filtering.
 
 ## Verification
 
-- Pending implementation and bounded validation.
+- The focused static baseline passed callback ordering, in-flight reset, typed
+  tweet filtering, generic diagnostics, and permalink contracts before stopping
+  only at the pending completed-plan assertion.
+- Six in-memory hostile mutations were rejected across either main-queue
+  boundary, login/load reset ordering, tweet publication, and typed filtering.
+- Full `make check`, `make lint`, `make test`, and `make build` pass from the
+  repository, and `make check` passes from `/tmp` through the absolute Makefile
+  path; unavailable historical Android/Xcode toolchains remain truthful skips.
+- Exact intended-path, generated-artifact, protected-file, whitespace,
+  conflict-marker, and changed-line credential-pattern audits pass before
+  delivery.

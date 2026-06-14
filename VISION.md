@@ -38,6 +38,8 @@ Current baseline:
   failure and tweet-load completion.
 - The iOS TableView sample type-checks loaded TwitterKit objects before
   replacing visible rows.
+- The iOS TableView sample publishes TwitterKit callback state and visible rows
+  only on the main queue.
 - The iOS TableView sample validates a credential-free HTTPS permalink before
   selected-tweet navigation.
 - The Android Wear mobile sample guards Twitter login button setup and

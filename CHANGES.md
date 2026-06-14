@@ -2,6 +2,7 @@
 
 ## 2026-06-14
 
+- Published iOS TwitterKit login, load, and table state on the main queue.
 - Validated each selected iOS tweet as a credential-free HTTPS permalink with a
   host before constructing the web request.
 - Added Android legacy dependency pins for the Fabric plugin, support-v4, and

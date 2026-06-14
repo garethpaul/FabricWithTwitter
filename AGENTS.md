@@ -59,6 +59,7 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   replacing visible rows.
 - The iOS TableView sample must validate a credential-free HTTPS permalink with
   a non-empty host before constructing a web request.
+- Publish iOS TwitterKit callback state and table updates only on the main queue.
 - CI must remain read-only, credential-free, pinned to immutable actions, and
   capable of parsing both Xcode projects on macOS.
 - Preserve the Android legacy dependency pins; do not restore dynamic `+`,

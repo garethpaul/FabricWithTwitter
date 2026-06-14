@@ -77,30 +77,33 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
-            if session == nil {
-                self.isLoadingTweets = false
-                println("Twitter guest login failed")
-                return
-            }
-
-            // Find the tweets with the tweetIDs
-            Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
-                (twttrs, error) -> Void in
-                self.isLoadingTweets = false
-
-                // If there are tweets do something magical
-                if let loadedTweetObjects = twttrs {
-                    var loadedTweets: [TWTRTweet] = []
-                    for i in loadedTweetObjects {
-                        if let tweet = i as? TWTRTweet {
-                            loadedTweets.append(tweet)
-                        }
-                    }
-                    self.tweets = loadedTweets
-                } else {
-                    println("Twitter tweet load failed")
+            dispatch_async(dispatch_get_main_queue()) {
+                if session == nil {
+                    self.isLoadingTweets = false
+                    println("Twitter guest login failed")
+                    return
                 }
 
+                // Find the tweets with the tweetIDs
+                Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
+                    (twttrs, error) -> Void in
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.isLoadingTweets = false
+
+                        // If there are tweets do something magical
+                        if let loadedTweetObjects = twttrs {
+                            var loadedTweets: [TWTRTweet] = []
+                            for i in loadedTweetObjects {
+                                if let tweet = i as? TWTRTweet {
+                                    loadedTweets.append(tweet)
+                                }
+                            }
+                            self.tweets = loadedTweets
+                        } else {
+                            println("Twitter tweet load failed")
+                        }
+                    }
+                }
             }
         }
 

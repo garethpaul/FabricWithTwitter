@@ -31,6 +31,8 @@ Helpful reports include:
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - iOS loaded TwitterKit response objects should be type-checked before they
   replace visible table contents.
+- iOS TwitterKit callback state and visible table publication should occur only
+  on the main queue.
 - Wear tweet loading should skip missing, empty, or whitespace-only tweet text
   before sending messages to the watch sample or displaying notifications.
 - Wear tweet messages should reject UTF-8 payloads over 1024 bytes before mobile
