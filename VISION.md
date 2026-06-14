@@ -54,6 +54,8 @@ Current baseline:
   intent filter; explicit app notifications remain its only entry path.
 - The Wear listener service declares its required system-binding export
   explicitly and limits its filter to the single Wear binding action.
+- The Wear listener service uses only framework-managed background delivery and
+  does not register a parallel message listener.
 - Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
   platform default charsets.
 - Wear listener diagnostics do not include raw incoming message paths.
@@ -88,6 +90,8 @@ Contribution rules:
 - Preserve Android backup opt-out when changing sample manifests.
 - Preserve the exact Wear listener export and single binding-action contract
   when changing the wearable manifest.
+- Preserve framework-managed Wear listener delivery; do not add a second
+  `GoogleApiClient` listener lifecycle to the service.
 - Preserve Wear mobile login button lifecycle guards when changing the legacy
   Twitter login flow.
 - Preserve Wear mobile tweet display container guards when changing legacy

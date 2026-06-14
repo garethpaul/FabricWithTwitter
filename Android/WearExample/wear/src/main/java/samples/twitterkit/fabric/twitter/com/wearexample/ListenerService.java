@@ -6,9 +6,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
 import java.nio.ByteBuffer;
@@ -24,18 +22,6 @@ public class ListenerService extends WearableListenerService {
     private static final int NOTIFICATION_ID = 1;
     private static final Charset UTF_8 = Charset.forName("UTF-8");
     private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;
-
-    private GoogleApiClient client;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        client = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .build();
-        client.connect();
-        Wearable.MessageApi.addListener( client, this );
-    }
 
     @Override
     public void onMessageReceived( final MessageEvent messageEvent ) {
@@ -102,14 +88,4 @@ public class ListenerService extends WearableListenerService {
         }
     }
 
-    @Override
-    public void onDestroy() {
-        if (client != null) {
-            Wearable.MessageApi.removeListener(client, this);
-            if (client.isConnected() || client.isConnecting()) {
-                client.disconnect();
-            }
-        }
-        super.onDestroy();
-    }
 }

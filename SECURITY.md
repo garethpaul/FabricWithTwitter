@@ -47,6 +47,8 @@ Helpful reports include:
 - The Wear listener service must remain explicitly exported because Google Play
   Services binds it for background data-layer delivery. Its manifest filter is
   limited to the single `com.google.android.gms.wearable.BIND_LISTENER` action.
+- The Wear listener service should rely on its framework-managed callback and
+  must not register a parallel `GoogleApiClient` message listener.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled

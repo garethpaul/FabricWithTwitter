@@ -23,6 +23,7 @@ WEAR_STRICT_UTF8_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-strict-utf8-decoding
 WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md"
 LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-independent-make.md"
 DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-pins.md"
+WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
@@ -85,6 +86,7 @@ for path in \
   "docs/plans/2026-06-13-wear-notification-pending-intent-refresh.md" \
   "docs/plans/2026-06-13-location-independent-make.md" \
   "docs/plans/2026-06-14-legacy-android-dependency-pins.md" \
+  "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-view-container-guard.md" \
@@ -375,10 +377,52 @@ if grep -Eq 'Log\.[a-z]+\([^;]*messageEvent\.getPath\(\)' "$WEAR_LISTENER"; then
   exit 1
 fi
 
-if ! grep -Fq "NotificationActivity.TWEET_KEY" "$WEAR_LISTENER" ||
-  ! grep -Fq "removeListener(client, this)" "$WEAR_LISTENER" ||
-  ! grep -Fq "client.disconnect()" "$WEAR_LISTENER"; then
-  printf '%s\n' "Wear listener must use shared extras and release its GoogleApiClient listener." >&2
+if ! grep -Fq "NotificationActivity.TWEET_KEY" "$WEAR_LISTENER"; then
+  printf '%s\n' "Wear listener must use the shared notification extra key." >&2
+  exit 1
+fi
+
+python3 - "$WEAR_LISTENER" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+required = (
+    "class ListenerService extends WearableListenerService",
+    "public void onMessageReceived( final MessageEvent messageEvent )",
+)
+forbidden = (
+    "GoogleApiClient",
+    "Wearable.MessageApi",
+    ".addListener(",
+    ".removeListener(",
+    "client.connect()",
+    "client.disconnect()",
+    "public void onCreate()",
+    "public void onDestroy()",
+)
+if any(fragment not in source for fragment in required):
+    raise SystemExit("Wear listener must retain framework-managed background delivery")
+if source.count("public void onMessageReceived(") != 1:
+    raise SystemExit("Wear listener must define exactly one message callback")
+if any(fragment in source for fragment in forbidden):
+    raise SystemExit("WearableListenerService must not register a parallel message listener")
+PY
+
+if ! grep -Fq "status: completed" "$WEAR_LISTENER_LIFECYCLE_PLAN" ||
+  ! grep -Fq "four isolated hostile mutations were rejected" "$WEAR_LISTENER_LIFECYCLE_PLAN" ||
+  ! grep -Fq "xcodebuild was unavailable" "$WEAR_LISTENER_LIFECYCLE_PLAN" ||
+  ! grep -Fq "No Twitter or Fabric credentials" "$WEAR_LISTENER_LIFECYCLE_PLAN"; then
+  printf '%s\n' "Wear listener lifecycle plan must record completed local verification." >&2
+  exit 1
+fi
+
+if ! grep -Fq "sole background delivery path" "$ROOT_DIR/CHANGES.md" ||
+  ! grep -Fq 'must not register a parallel `GoogleApiClient` message listener' "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "framework-managed background delivery" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "WearableListenerService owns background message delivery" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "parallel GoogleApiClient listener registration" "$ROOT_DIR/AGENTS.md"; then
+  printf '%s\n' "Wear listener lifecycle guidance must remain synchronized." >&2
   exit 1
 fi
 

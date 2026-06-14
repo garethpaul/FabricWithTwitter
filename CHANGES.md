@@ -4,6 +4,8 @@
 
 - Added Android legacy dependency pins for the Fabric plugin, support-v4, and
   wearable-only Google Play Services artifacts.
+- Removed redundant Wear message-listener registration so the framework-managed
+  `WearableListenerService` callback is the sole background delivery path.
 
 ## 2026-06-13
 
