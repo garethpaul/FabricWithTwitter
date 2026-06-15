@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-15
+
+- Enforced canonical Twitter and X hosts with no explicit port for iOS selected-
+  tweet navigation, rejecting unrelated domains and host lookalikes before web
+  request creation.
+
 ## 2026-06-14
 
 - Published iOS TwitterKit login, load, and table state on the main queue.

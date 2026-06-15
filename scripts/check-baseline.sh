@@ -25,6 +25,7 @@ LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-indepen
 DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-pins.md"
 WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
+IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
 IOS_TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-twitter-main-queue.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
@@ -91,6 +92,7 @@ for path in \
   "docs/plans/2026-06-14-legacy-android-dependency-pins.md" \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
+  "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "scripts/check-ios-tweet-permalink.py" \
   "docs/plans/2026-06-14-ios-twitter-main-queue.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
@@ -103,7 +105,7 @@ done
 
 python3 "$IOS_TWEET_PERMALINK_CHECK" \
   "$IOS_TABLE_VIEW" \
-  "$IOS_TWEET_PERMALINK_PLAN"
+  "$IOS_TWEET_PERMALINK_HOST_PLAN"
 
 if ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/README.md" ||
   ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/SECURITY.md" ||
@@ -113,6 +115,13 @@ if ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/README.md" ||
   printf '%s\n' "Project guidance must preserve validated iOS tweet navigation." >&2
   exit 1
 fi
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
+  if ! grep -Fq "canonical Twitter and X hosts with no explicit port" "$document"; then
+    printf '%s\n' "$document must document the canonical iOS tweet permalink host boundary." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq 'ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))' "$ROOT_DIR/Makefile" ||
   ! grep -Fq '"$(ROOT)/scripts/check-baseline.sh"' "$ROOT_DIR/Makefile"; then

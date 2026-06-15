@@ -40,8 +40,9 @@ Current baseline:
   replacing visible rows.
 - The iOS TableView sample publishes TwitterKit callback state and visible rows
   only on the main queue.
-- The iOS TableView sample validates a credential-free HTTPS permalink before
-  selected-tweet navigation.
+- The iOS TableView sample validates a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port before selected-tweet
+  navigation.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container

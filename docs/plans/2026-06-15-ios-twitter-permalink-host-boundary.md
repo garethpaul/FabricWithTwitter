@@ -1,7 +1,7 @@
 ---
 title: iOS Twitter Permalink Host Boundary
 type: security
-status: pending
+status: completed
 date: 2026-06-15
 execution: code
 ---
@@ -46,9 +46,16 @@ ports from malformed or compromised tweet models.
 
 ## Verification
 
-- Pending focused host and URL boundary checks.
-- Pending hostile mutations for exact matching, allowlist expansion, explicit
-  ports, validation ordering, guidance, and completed-plan evidence.
-- Pending repository and external-directory `make check`.
-- Pending exact intended-path, artifact, project-file, whitespace,
-  conflict-marker, and changed-line credential audits.
+- The focused checker accepted exact canonical Twitter/X hosts, including
+  mixed-case scheme/host input, and rejected nil, non-HTTPS, hostless,
+  credential-bearing, explicit-port, unrelated-host, subdomain, and suffix-
+  lookalike URLs.
+- Thirteen isolated hostile mutations were rejected across missing and expanded
+  host allowlists, suffix matching, X-host coverage, explicit-port and helper
+  enforcement, pre-web-view ordering, and all six maintained guidance files.
+- Repository-root and external-directory `make check` passed the portable
+  cross-platform baseline; local Android, Xcode, simulator, physical-device,
+  Fabric, and live Twitter behavior were not executed on Linux.
+- Exact intended-path, generated-artifact, Android/Xcode-project preservation,
+  whitespace, conflict-marker, and changed-line credential audits passed before
+  delivery.

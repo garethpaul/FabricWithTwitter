@@ -126,8 +126,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   visible rows atomically so malformed responses cannot crash or duplicate rows.
 - The iOS TableView sample publishes TwitterKit callback state and table updates
   only on the main queue.
-- The iOS TableView sample requires a credential-free HTTPS permalink with a
-  non-empty host before opening a selected tweet.
+- The iOS TableView sample requires a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port before opening a selected
+  tweet; exact matching rejects subdomains and suffix lookalikes.
 
 ## Security and Privacy Notes
 
@@ -163,6 +164,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   mobile tweet display container guard.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
   baseline.
+- See `docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md` for the
+  exact iOS Twitter/X navigation host boundary.
 
 ## Contributing
 
