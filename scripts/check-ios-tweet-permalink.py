@@ -1,95 +1,101 @@
 #!/usr/bin/env python3
-import sys
+"""Verify the production and navigation tweet permalink boundary."""
+
 from pathlib import Path
 import re
+import sys
 from urllib.parse import urlsplit
 
 CANONICAL_HOSTS = ("twitter.com", "www.twitter.com", "x.com", "www.x.com")
 
 
-source = Path(sys.argv[1]).read_text(encoding="utf-8")
-plan = Path(sys.argv[2]).read_text(encoding="utf-8")
-
-required = [
-    "func isCanonicalTweetPermalinkHost(host: String?) -> Bool",
-    "func validatedTweetPermalink(url: NSURL?) -> NSURL?",
-    'candidate.scheme?.lowercaseString == "https"',
-    "candidate.user == nil",
-    "candidate.password == nil",
-    "candidate.port == nil",
-    "isCanonicalTweetPermalinkHost(candidate.host)",
-    "validatedTweetPermalink(tweet?.permalink)",
-    "webView.loadRequest(NSURLRequest(URL: permalink))",
-    'println("Tweet permalink was rejected")',
-]
-for fragment in required:
-    if fragment not in source:
-        raise SystemExit("iOS tweet permalink boundary missing: " + fragment)
-
-helper_start = source.find("func isCanonicalTweetPermalinkHost")
-validator_start = source.find("func validatedTweetPermalink", helper_start)
-helper = source[helper_start:validator_start]
-for forbidden in ("hasSuffix", "containsString", "candidateHost !=", "return true"):
-    if forbidden in helper:
-        raise SystemExit("iOS tweet permalink hosts must use exact equality")
-allowed_hosts = re.findall(r'candidateHost == "([^"]+)"', helper)
-if allowed_hosts != list(CANONICAL_HOSTS):
-    raise SystemExit("iOS tweet permalink allowlist must contain exactly four canonical hosts")
-
-selection = source.find(
-    "func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!)"
-)
-validation = source.find("validatedTweetPermalink(tweet?.permalink)", selection)
-web_view = source.find("let webView = UIWebView", selection)
-request = source.find("webView.loadRequest(NSURLRequest(URL: permalink))", selection)
-navigation = source.find("pushViewController(webViewController", selection)
-if -1 in (selection, validation, web_view, request, navigation) or not (
-    selection < validation < web_view < request < navigation
-):
-    raise SystemExit("Tweet permalink validation must precede web-view, request, and navigation creation.")
-if "NSURLRequest(URL: tweet.permalink)" in source:
-    raise SystemExit("Raw tweet permalinks must not reach NSURLRequest.")
-
-
-def accepts(url):
-    if url is None:
-        return False
-    parsed = urlsplit(url)
+def accepts(url: str) -> bool:
+    candidate = urlsplit(url)
     return (
-        parsed.scheme.lower() == "https"
-        and parsed.username is None
-        and parsed.password is None
-        and parsed.port is None
-        and parsed.hostname in CANONICAL_HOSTS
+        candidate.scheme.lower() == "https"
+        and candidate.username is None
+        and candidate.password is None
+        and candidate.port is None
+        and candidate.hostname in CANONICAL_HOSTS
     )
 
 
-accepted = [
-    "https://twitter.com/example/status/1",
-    "HTTPS://www.twitter.com/example/status/1?ref=app",
-    "https://x.com/example/status/1",
-    "https://www.x.com/example/status/1#context",
-]
-rejected = [
-    None,
-    "http://twitter.com/example/status/1",
-    "https:///example/status/1",
-    "https://user@twitter.com/example/status/1",
-    "https://user:pass@twitter.com/example/status/1",
-    "https://twitter.com:8443/example/status/1",
-    "https://mobile.twitter.com/example/status/1",
-    "https://twitter.com.evil.example/status/1",
-    "https://evil-twitter.com/example/status/1",
-    "https://example.com/twitter/status/1",
-    "javascript:alert(1)",
-]
-if not all(accepts(url) for url in accepted):
-    raise SystemExit("Permalink boundary rejected an allowed HTTPS URL.")
-if any(accepts(url) for url in rejected):
-    raise SystemExit("Permalink boundary accepted a rejected URL.")
+def main() -> None:
+    if len(sys.argv) != 3:
+        raise SystemExit(
+            "usage: check-ios-tweet-permalink.py "
+            "<TweetPermalinkPolicy.swift> <ViewController.swift>"
+        )
 
-for evidence in ("status: completed", "hostile mutations were rejected", "make check"):
-    if evidence not in plan:
-        raise SystemExit("iOS tweet permalink plan missing: " + evidence)
+    source = Path(sys.argv[1]).read_text(encoding="utf-8")
+    navigation = Path(sys.argv[2]).read_text(encoding="utf-8")
+    required = (
+        'candidateHost == "twitter.com"',
+        'candidateHost == "www.twitter.com"',
+        'candidateHost == "x.com"',
+        'candidateHost == "www.x.com"',
+        "#if EXECUTABLE_POLICY_TESTS",
+        "let candidateHost = host.lowercased()",
+        "let candidateHost = host.lowercaseString",
+        "let normalizedScheme = scheme.lowercased()",
+        "let normalizedScheme = scheme.lowercaseString",
+        'normalizedScheme == "https"',
+        "let hasCanonicalHost = isCanonicalTweetPermalinkHost",
+        "if hasCanonicalHost",
+        "candidate.port == nil",
+        "isCanonicalTweetPermalinkHost(candidate.host)",
+    )
+    missing = [contract for contract in required if contract not in source]
+    if missing:
+        raise SystemExit("Missing iOS permalink contracts: " + ", ".join(missing))
 
-print("iOS tweet permalink checks passed.")
+    helper_start = source.find("func isCanonicalTweetPermalinkHost")
+    validator_start = source.find("func validatedTweetPermalink", helper_start)
+    helper = source[helper_start:validator_start]
+    forbidden = ("hasSuffix", "containsString", "candidateHost !=", "return true")
+    if helper_start == -1 or validator_start == -1 or any(token in helper for token in forbidden):
+        raise SystemExit("iOS permalink hosts must use exact equality")
+    if re.findall(r'candidateHost == "([^"]+)"', helper) != list(CANONICAL_HOSTS):
+        raise SystemExit("iOS permalink allowlist must contain exactly four canonical hosts")
+
+    selection = navigation.find(
+        "func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!)"
+    )
+    validation = navigation.find("validatedTweetPermalink(tweet?.permalink)", selection)
+    web_view = navigation.find("let webView = UIWebView", selection)
+    request = navigation.find("webView.loadRequest(NSURLRequest(URL: permalink))", selection)
+    push = navigation.find("pushViewController", selection)
+    if -1 in (selection, validation, web_view, request, push) or not (
+        selection < validation < web_view < request < push
+    ):
+        raise SystemExit("Tweet permalink validation must precede request and navigation creation")
+    if "func validatedTweetPermalink" in navigation:
+        raise SystemExit("ViewController must delegate to the production permalink policy")
+
+    accepted = (
+        "https://twitter.com/example/status/1",
+        "https://www.twitter.com/example/status/1?ref=app",
+        "https://x.com/example/status/1",
+        "https://www.x.com/example/status/1#context",
+        "https://TWITTER.COM/example/status/1",
+    )
+    rejected = (
+        "http://twitter.com/example/status/1",
+        "https://user@twitter.com/example/status/1",
+        "https://twitter.com:8443/example/status/1",
+        "https://mobile.twitter.com/example/status/1",
+        "https://twitter.com.evil.example/status/1",
+        "https://evil-twitter.com/example/status/1",
+        "https://example.com/twitter/status/1",
+        "https:///example/status/1",
+    )
+    if not all(accepts(url) for url in accepted):
+        raise SystemExit("Canonical iOS permalink matrix rejected a valid URL")
+    if any(accepts(url) for url in rejected):
+        raise SystemExit("Canonical iOS permalink matrix accepted an invalid URL")
+
+    print("iOS tweet permalink checks passed.")
+
+
+if __name__ == "__main__":
+    main()

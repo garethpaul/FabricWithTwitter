@@ -8,6 +8,11 @@
 `garethpaul/FabricWithTwitter` contains legacy Android, Wear, iOS, and watchOS
 samples showing how the retired Fabric and TwitterKit SDKs were integrated.
 
+The portable Make gate compiles and executes the production iOS tweet permalink
+policy when `swiftc` is available. This proves the deterministic URL allowlist
+without claiming TwitterKit, simulator/device, live-service, Android, Wear, or
+template XCTest execution.
+
 This README is based on the checked-in source, manifests, scripts, and
 repository metadata on the `master` branch. The repository mixes Java, Swift,
 Gradle, Xcode projects, shell verification, and vendored historical frameworks.

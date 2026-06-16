@@ -20,6 +20,9 @@ Priority:
 - Avoid committing Twitter keys, Fabric API keys, tokens, or signing material
 - Keep legacy dependency assumptions visible
 - Keep GitHub Actions aligned with the local `make check` baseline
+- Keep deterministic security decisions executable without retired SDKs: the
+  iOS permalink policy is shared by production navigation and a standalone
+  Swift harness, while live TwitterKit and device behavior remain manual.
 
 Current baseline:
 

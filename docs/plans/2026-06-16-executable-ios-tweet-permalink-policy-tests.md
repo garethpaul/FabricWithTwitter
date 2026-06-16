@@ -2,7 +2,7 @@
 title: Execute the iOS tweet permalink policy
 type: testing
 date: 2026-06-16
-status: in_progress
+status: completed
 execution: code
 ---
 
@@ -57,14 +57,26 @@ Files: `AGENTS.md`, `CHANGES.md`, `README.md`, `SECURITY.md`, `VISION.md`
 Record what the harness proves and retain the device, TwitterKit, Android/Wear,
 and live-service exclusions.
 
-## Verification
+## Work Completed
 
-- Run focused policy tests through the portable runner when `swiftc` exists.
-- Run all Make aliases from the repository root and `make check` by absolute
-  Makefile path from an external directory.
-- Reject mutations that weaken policy constraints, bypass production
-  delegation, remove Xcode membership, reduce accepted/rejected cases, or
-  reopen completed plan evidence.
-- Audit shell syntax, project references, executable modes, diffs, generated
-  artifacts, and changed-line credential patterns before commit.
+- Extracted the production Foundation-only policy and added it to the iOS app
+  target while preserving the legacy navigation helper signatures.
+- Added a standalone Swift input matrix and bounded temporary-build runner.
+- Wired every Make alias to execute the harness when `swiftc` is available.
+- Added static contracts for production delegation, Xcode target membership,
+  runner inputs, accepted and hostile cases, documentation, and plan evidence.
 
+## Verification Completed
+
+- all four Make gates passed from the repository root.
+- The absolute Makefile path passed from an external directory.
+- The production policy mutation failed after weakening a host constraint.
+- The navigation delegation mutation failed after bypassing the validator.
+- The Xcode target membership mutation failed after removing the policy source.
+- The accepted URL mutation failed after removing a canonical case.
+- The hostile URL mutation failed after removing a rejected case.
+- The plan evidence mutation failed after reopening the completion status.
+- Shell syntax, project references, executable modes, diff checks, artifact
+  scans, and changed-line credential-pattern scans passed.
+- `swiftc` and Xcode are unavailable on this Linux host, so local gates verify
+  deterministic source wiring and defer Swift execution to the hosted pull-request check.

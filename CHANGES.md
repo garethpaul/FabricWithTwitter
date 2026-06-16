@@ -1,5 +1,11 @@
 # Changes
 
+## 2026-06-16
+
+- Extracted the iOS tweet permalink decision into production Foundation source
+  and added a standalone Swift harness that executes the same policy from every
+  Make gate when `swiftc` is available.
+
 ## 2026-06-15
 
 - Enforced canonical Twitter and X hosts with no explicit port for iOS selected-

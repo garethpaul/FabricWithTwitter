@@ -6,6 +6,11 @@ The supported security scope for `FabricWithTwitter` is the current default bran
 
 Project summary: A simple application that showcases how to integrate Fabric with Twitter
 
+`make check` executes the Foundation-only production iOS permalink policy when
+`swiftc` is available, covering canonical Twitter/X hosts, HTTPS, credentials,
+ports, and host lookalikes. Live TwitterKit navigation and device behavior
+remain outside this deterministic boundary.
+
 ## Reporting a Vulnerability
 
 Please report suspected vulnerabilities through GitHub's private vulnerability reporting or by opening a draft GitHub Security Advisory for `garethpaul/FabricWithTwitter` when that option is available. If GitHub does not show a private reporting option for this repository, contact the repository owner through GitHub and avoid posting exploit details publicly until the issue can be assessed.

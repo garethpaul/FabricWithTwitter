@@ -27,6 +27,11 @@ WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-life
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
+IOS_TWEET_PERMALINK_EXECUTION_PLAN="$ROOT_DIR/docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md"
+IOS_TWEET_PERMALINK_POLICY="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift/TweetPermalinkPolicy.swift"
+IOS_TWEET_PERMALINK_RUNNER="$ROOT_DIR/scripts/run-ios-tweet-permalink-policy-tests.sh"
+IOS_TWEET_PERMALINK_TEST="$ROOT_DIR/Tests/TweetPermalinkPolicyTests/main.swift"
+IOS_TABLE_PROJECT="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj"
 IOS_TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-twitter-main-queue.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
@@ -71,6 +76,7 @@ for path in \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
+  "iOS/TableViewTweetsSwift/TableViewTweetsSwift/TweetPermalinkPolicy.swift" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/manual-sample-verification.md" \
@@ -93,7 +99,10 @@ for path in \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
+  "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
   "scripts/check-ios-tweet-permalink.py" \
+  "scripts/run-ios-tweet-permalink-policy-tests.sh" \
+  "Tests/TweetPermalinkPolicyTests/main.swift" \
   "docs/plans/2026-06-14-ios-twitter-main-queue.md" \
   "docs/plans/2026-06-09-wear-notification-text-view-guard.md" \
   "docs/plans/2026-06-09-wear-tweet-payload-guard.md" \
@@ -104,8 +113,68 @@ for path in \
 done
 
 python3 "$IOS_TWEET_PERMALINK_CHECK" \
-  "$IOS_TABLE_VIEW" \
-  "$IOS_TWEET_PERMALINK_HOST_PLAN"
+  "$IOS_TWEET_PERMALINK_POLICY" \
+  "$IOS_TABLE_VIEW"
+
+python3 - "$IOS_TABLE_PROJECT" "$ROOT_DIR/Makefile" "$IOS_TWEET_PERMALINK_RUNNER" "$IOS_TWEET_PERMALINK_TEST" <<'PY'
+from pathlib import Path
+import sys
+
+project, makefile, runner, tests = (Path(path).read_text(encoding="utf-8") for path in sys.argv[1:])
+if project.count("TweetPermalinkPolicy.swift in Sources") != 2:
+    raise SystemExit("TweetPermalinkPolicy must belong to the iOS app target once")
+if project.count("/* TweetPermalinkPolicy.swift */") != 3:
+    raise SystemExit("TweetPermalinkPolicy project references must remain complete and unique")
+if makefile.count("scripts/run-ios-tweet-permalink-policy-tests.sh") != 1:
+    raise SystemExit("Make check must execute the iOS permalink policy runner once")
+for path in (
+    "iOS/TableViewTweetsSwift/TableViewTweetsSwift/TweetPermalinkPolicy.swift",
+    "Tests/TweetPermalinkPolicyTests/main.swift",
+):
+    if path not in runner:
+        raise SystemExit("Policy runner missing production or test input: " + path)
+for value in (
+    "https://twitter.com/example/status/1",
+    "https://www.x.com/example/status/1#context",
+    "https://TWITTER.COM/example/status/1",
+    "http://twitter.com/example/status/1",
+    "https://user:password@twitter.com/example/status/1",
+    "https://twitter.com:8443/example/status/1",
+    "https://twitter.com.evil.example/status/1",
+    "https://evil-twitter.com/example/status/1",
+    "https:///example/status/1",
+):
+    if value not in tests:
+        raise SystemExit("Executable permalink matrix missing: " + value)
+PY
+
+python3 - "$IOS_TWEET_PERMALINK_EXECUTION_PLAN" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+plan = Path(sys.argv[1]).read_text(encoding="utf-8")
+frontmatter = plan.split("---", 2)[1]
+verification = plan.split("## Verification Completed\n", 1)[-1]
+required = (
+    "all four Make gates passed",
+    "absolute Makefile path passed",
+    "production policy mutation failed",
+    "navigation delegation mutation failed",
+    "Xcode target membership mutation failed",
+    "accepted URL mutation failed",
+    "hostile URL mutation failed",
+    "plan evidence mutation failed",
+    "hosted pull-request check",
+)
+if (
+    re.findall(r"^status: .+$", frontmatter, flags=re.MULTILINE) != ["status: completed"]
+    or "## Verification Completed\n" not in plan
+    or any(item not in verification for item in required)
+    or re.search(r"\b(?:pending|todo|tbd|not run|not yet)\b", verification, re.IGNORECASE)
+):
+    raise SystemExit("Executable iOS permalink test plan must retain completed evidence")
+PY
 
 if ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/README.md" ||
   ! grep -Fq "credential-free HTTPS permalink" "$ROOT_DIR/SECURITY.md" ||

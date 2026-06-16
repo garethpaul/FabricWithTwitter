@@ -20,6 +20,9 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   available.
 - Full baseline: `make check`
 - External baseline: `make -f /absolute/path/to/Makefile check`
+- The Make gate compiles and executes the Foundation-only production iOS tweet
+  permalink policy when `swiftc` is available; it does not claim TwitterKit,
+  simulator/device, or template XCTest execution.
 - Lint/static checks: `make lint`
 - Tests: `make test`
 - Build: `make build`
