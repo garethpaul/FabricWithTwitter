@@ -79,4 +79,7 @@ and live-service exclusions.
 - Shell syntax, project references, executable modes, diff checks, artifact
   scans, and changed-line credential-pattern scans passed.
 - `swiftc` and Xcode are unavailable on this Linux host, so local gates verify
-  deterministic source wiring and defer Swift execution to the hosted pull-request check.
+  deterministic source wiring without claiming local Swift or Xcode execution.
+- Pull-request run `27645791177` passed at implementation commit
+  `2474a31b4c0fd31d56f03eff37a4b34c5e204e69`, including the hosted Swift
+  policy harness and Xcode project parsing.
