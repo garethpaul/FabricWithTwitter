@@ -28,6 +28,7 @@ IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-va
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
 IOS_TWEET_PERMALINK_EXECUTION_PLAN="$ROOT_DIR/docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md"
+IOS_TWEET_PERMALINK_SIGNAL_PLAN="$ROOT_DIR/docs/plans/2026-06-18-ios-tweet-permalink-harness-signal-cleanup.md"
 IOS_TWEET_PERMALINK_POLICY="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift/TweetPermalinkPolicy.swift"
 IOS_TWEET_PERMALINK_RUNNER="$ROOT_DIR/scripts/run-ios-tweet-permalink-policy-tests.sh"
 IOS_TWEET_PERMALINK_TEST="$ROOT_DIR/Tests/TweetPermalinkPolicyTests/main.swift"
@@ -100,6 +101,7 @@ for path in \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
+  "docs/plans/2026-06-18-ios-tweet-permalink-harness-signal-cleanup.md" \
   "scripts/check-ios-tweet-permalink.py" \
   "scripts/run-ios-tweet-permalink-policy-tests.sh" \
   "Tests/TweetPermalinkPolicyTests/main.swift" \
@@ -118,6 +120,7 @@ python3 "$IOS_TWEET_PERMALINK_CHECK" \
 
 python3 - "$IOS_TABLE_PROJECT" "$ROOT_DIR/Makefile" "$IOS_TWEET_PERMALINK_RUNNER" "$IOS_TWEET_PERMALINK_TEST" <<'PY'
 from pathlib import Path
+import re
 import sys
 
 project, makefile, runner, tests = (Path(path).read_text(encoding="utf-8") for path in sys.argv[1:])
@@ -133,6 +136,20 @@ for path in (
 ):
     if path not in runner:
         raise SystemExit("Policy runner missing production or test input: " + path)
+signal_handler = re.compile(
+    r'''handle_signal\(\) \{\s*'''
+    r'''status=\$1\s*'''
+    r'''trap - 0 1 2 15\s*'''
+    r'''cleanup\s*'''
+    r'''exit "\$status"\s*'''
+    r'''\}'''
+)
+if not signal_handler.search(runner):
+    raise SystemExit("iOS permalink runner signals must clean temporary output before exiting")
+for signal, status in ((1, 129), (2, 130), (15, 143)):
+    binding = f"trap 'handle_signal {status}' {signal}"
+    if runner.count(binding) != 1:
+        raise SystemExit(f"iOS permalink runner must retain signal binding: {binding}")
 for value in (
     "https://twitter.com/example/status/1",
     "https://www.x.com/example/status/1#context",
@@ -147,6 +164,16 @@ for value in (
     if value not in tests:
         raise SystemExit("Executable permalink matrix missing: " + value)
 PY
+
+for signal_cleanup_plan_contract in \
+  "status: planned" \
+  'exit-only signal traps leave `ios-tweet-permalink-policy-tests.*` behind' \
+  "success, compiler failure, and bounded termination"; do
+  if ! grep -Fq "$signal_cleanup_plan_contract" "$IOS_TWEET_PERMALINK_SIGNAL_PLAN"; then
+    printf '%s\n' "iOS permalink harness signal-cleanup plan must retain evidence: $signal_cleanup_plan_contract" >&2
+    exit 1
+  fi
+done
 
 python3 - "$IOS_TWEET_PERMALINK_EXECUTION_PLAN" <<'PY'
 from pathlib import Path
