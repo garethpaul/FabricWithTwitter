@@ -166,9 +166,13 @@ for value in (
 PY
 
 for signal_cleanup_plan_contract in \
-  "status: planned" \
+  "status: completed" \
   'exit-only signal traps leave `ios-tweet-permalink-policy-tests.*` behind' \
-  "success, compiler failure, and bounded termination"; do
+  "## Verification Completed" \
+  "937c91a17e010ab47b811c4a194d7f299843a769" \
+  'Pull-request run `27746955355` completed successfully' \
+  "status 42" \
+  '`TERM` binding were rejected'; do
   if ! grep -Fq "$signal_cleanup_plan_contract" "$IOS_TWEET_PERMALINK_SIGNAL_PLAN"; then
     printf '%s\n' "iOS permalink harness signal-cleanup plan must retain evidence: $signal_cleanup_plan_contract" >&2
     exit 1
