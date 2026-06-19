@@ -19,6 +19,10 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   environments documented by each sample; no current one-command install is
   available.
 - Full baseline: `make check`
+- External baseline: `make -f /absolute/path/to/Makefile check`
+- The Make gate compiles and executes the Foundation-only production iOS tweet
+  permalink policy when `swiftc` is available; it does not claim TwitterKit,
+  simulator/device, or template XCTest execution.
 - Lint/static checks: `make lint`
 - Tests: `make test`
 - Build: `make build`
@@ -50,14 +54,28 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that the text view target exists before setting tweet text.
+- Wear notification PendingIntents must remain immutable on API 23 and newer
+  while preserving `FLAG_UPDATE_CURRENT` identity semantics.
+- Never print historical credential values. The values committed in 2014 must
+  be treated as compromised until the repository owner revokes or deletes them
+  with provider access; see `docs/credential-incident-response.md`.
+- Wear notification PendingIntents must refresh the latest validated tweet extra.
+- WearableListenerService owns background message delivery; do not add a
+  parallel GoogleApiClient listener registration or cleanup lifecycle.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.
+- The iOS TableView sample must validate a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port before constructing a web
+  request; preserve exact matching and reject credentials and host lookalikes.
+- Publish iOS TwitterKit callback state and table updates only on the main queue.
 - CI must remain read-only, credential-free, pinned to immutable actions, and
   capable of parsing both Xcode projects on macOS.
+- Preserve the Android legacy dependency pins; do not restore dynamic `+`,
+  `latest`, or range selectors in Gradle declarations.
 - Use `docs/manual-sample-verification.md` for runtime claims. Preserve its
   per-sample results, fixed public-content warning, Wear UTF-8/1024-byte and
-  component boundaries, unsafe iOS permalink limitation, no-force-crash rule,
+  component boundaries, validated iOS permalink boundary, no-force-crash rule,
   cleanup, redaction, and unexecuted Linux status.
 
 ## Agent workflow

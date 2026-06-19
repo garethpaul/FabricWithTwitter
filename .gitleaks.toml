@@ -1,0 +1,11 @@
+title = "FabricWithTwitter credential policy"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "fabric-twitter-plist-credential"
+description = "Literal Fabric or Twitter credential in an Apple plist"
+regex = '''(?is)<key>(?:APIKey|consumerKey|consumerSecret)</key>\s*<string>([^<$][^<]{19,})</string>'''
+secretGroup = 1
+keywords = ["APIKey", "consumerKey", "consumerSecret"]

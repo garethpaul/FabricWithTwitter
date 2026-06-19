@@ -20,9 +20,14 @@ Priority:
 - Avoid committing Twitter keys, Fabric API keys, tokens, or signing material
 - Keep legacy dependency assumptions visible
 - Keep GitHub Actions aligned with the local `make check` baseline
+- Keep deterministic security decisions executable without retired SDKs: the
+  iOS permalink policy is shared by production navigation and a standalone
+  Swift harness, while live TwitterKit and device behavior remain manual.
 
 Current baseline:
 
+- Make verification resolves repository paths independently of the caller's
+  working directory.
 - `scripts/check-baseline.sh` verifies that iOS Fabric run scripts read
   `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` from the local environment instead
   of committed identifiers.
@@ -36,6 +41,11 @@ Current baseline:
   failure and tweet-load completion.
 - The iOS TableView sample type-checks loaded TwitterKit objects before
   replacing visible rows.
+- The iOS TableView sample publishes TwitterKit callback state and visible rows
+  only on the main queue.
+- The iOS TableView sample validates a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port before selected-tweet
+  navigation.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container
@@ -43,12 +53,17 @@ Current baseline:
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet payloads are bounded to 1024 UTF-8 bytes before send and decode.
+- Wear listener decoding rejects malformed or unmappable UTF-8 before
+  notification construction.
 - Wear notification display verifies that its text view target exists before
   setting tweet text.
+- Wear notification PendingIntents refresh the latest validated tweet extra.
 - The Wear notification detail activity is internal-only and has no launcher
   intent filter; explicit app notifications remain its only entry path.
 - The Wear listener service declares its required system-binding export
   explicitly and limits its filter to the single Wear binding action.
+- The Wear listener service uses only framework-managed background delivery and
+  does not register a parallel message listener.
 - Wear tweet messages are encoded and decoded with explicit UTF-8 instead of
   platform default charsets.
 - Wear listener diagnostics do not include raw incoming message paths.
@@ -64,12 +79,13 @@ Current baseline:
   immutable revisions.
 - A per-sample verification matrix now separates Android DisplayTweets, Wear
   mobile/listener, iOS TableView, and WatchSample build/runtime evidence,
-  privacy constraints, known unsafe/destructive paths, cleanup, and redaction
-  without claiming that the matrix has been executed.
+  privacy constraints, validated permalink/destructive paths, cleanup, and
+  redaction without claiming that the matrix has been executed.
 
 Next priorities:
 
-- Replace dynamic dependencies with reproducible versions if the sample is revived
+- Preserve the Android legacy dependency pins while planning a separately
+  verified replacement for the retired toolchain
 - Document modern alternatives to Fabric/TwitterKit
 - Add executable login, display, Wear transport, and lifecycle tests after the
   retired dependencies can be isolated or replaced
@@ -82,6 +98,8 @@ Contribution rules:
 - Preserve Android backup opt-out when changing sample manifests.
 - Preserve the exact Wear listener export and single binding-action contract
   when changing the wearable manifest.
+- Preserve framework-managed Wear listener delivery; do not add a second
+  `GoogleApiClient` listener lifecycle to the service.
 - Preserve Wear mobile login button lifecycle guards when changing the legacy
   Twitter login flow.
 - Preserve Wear mobile tweet display container guards when changing legacy

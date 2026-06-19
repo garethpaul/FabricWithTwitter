@@ -1,11 +1,49 @@
 # Changes
 
+- Removed literal Fabric/Twitter credentials from the tracked TableView plist,
+  added a redacted current-tree secret gate, and documented mandatory
+  provider-side revocation for the credentials that remain exposed in history.
+- Rejected non-status paths on otherwise canonical Twitter/X permalink hosts.
+- Centralized strict Wear payload decoding, Unicode whitespace normalization,
+  control-character rejection, and API-aware immutable notification intents in
+  a pure Java policy with executable tests.
+- Replaced mismatched Gradle 1.6-snapshot wrapper JARs with the reviewed Gradle
+  v2.1 source artifact and added mutation-sensitive provenance checks without
+  executing the legacy wrapper.
+
+## 2026-06-16
+
+- Extracted the iOS tweet permalink decision into production Foundation source
+  and added a standalone Swift harness that executes the same policy from every
+  Make gate when `swiftc` is available.
+
+## 2026-06-15
+
+- Enforced canonical Twitter and X hosts with no explicit port for iOS selected-
+  tweet navigation, rejecting unrelated domains and host lookalikes before web
+  request creation.
+
+## 2026-06-14
+
+- Published iOS TwitterKit login, load, and table state on the main queue.
+- Validated each selected iOS tweet as a credential-free HTTPS permalink with a
+  host before constructing the web request.
+- Added Android legacy dependency pins for the Fabric plugin, support-v4, and
+  wearable-only Google Play Services artifacts.
+- Removed redundant Wear message-listener registration so the framework-managed
+  `WearableListenerService` callback is the sole background delivery path.
+
 ## 2026-06-13
 
+- Made Make verification independent of the caller's working directory.
+- Refreshed reused Wear notification PendingIntent extras so later taps open
+  the latest validated tweet text instead of stale content.
+- Reject malformed or unmappable Wear UTF-8 payloads before notification state
+  is created.
 - Bounded Wear tweet messages to 1024 UTF-8 bytes before mobile transport and
   listener decoding.
 - Added a truthful per-sample Android, Wear, iOS, and watchOS verification matrix
-  with privacy, legacy-service, unsafe permalink, destructive crash, cleanup,
+  with privacy, legacy-service, permalink, destructive crash, cleanup,
   and redacted-evidence boundaries; the Linux session did not execute it.
 
 ## 2026-06-12

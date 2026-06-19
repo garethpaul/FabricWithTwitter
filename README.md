@@ -8,6 +8,11 @@
 `garethpaul/FabricWithTwitter` contains legacy Android, Wear, iOS, and watchOS
 samples showing how the retired Fabric and TwitterKit SDKs were integrated.
 
+The portable Make gate compiles and executes the production iOS tweet permalink
+policy when `swiftc` is available. This proves the deterministic URL allowlist
+without claiming TwitterKit, simulator/device, live-service, Android, Wear, or
+template XCTest execution.
+
 This README is based on the checked-in source, manifests, scripts, and
 repository metadata on the `master` branch. The repository mixes Java, Swift,
 Gradle, Xcode projects, shell verification, and vendored historical frameworks.
@@ -47,10 +52,22 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 ## Running or Using the Project
 
 - Use Android Studio to open the project or run `gradle assembleDebug` when the Android SDK is configured.
+- Android legacy dependency pins remove dynamic selectors while preserving the
+  original Gradle, SDK, Fabric, TwitterKit, and Wear API generations.
+- The checked-in Android wrapper JARs are pinned to the reviewed Gradle v2.1
+  source artifact. Before any legacy wrapper execution, independently verify
+  the downloaded `gradle-2.1-all.zip` SHA-256 documented by the provenance
+  checker; CI does not execute these retired builds.
 - Open the Xcode project or workspace in Xcode and run the matching app/sample scheme.
 - Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in local Gradle/Xcode
   environment settings when exercising Fabric upload behavior. The checked-in
   iOS build phases skip Fabric upload when those variables are absent.
+- The TableView iOS sample keeps `FABRIC_API_KEY`, `TWITTER_CONSUMER_KEY`, and
+  `TWITTER_CONSUMER_SECRET` as inert build-setting placeholders in its tracked
+  plist. Copy `Config/LocalSecrets.xcconfig.example` to the ignored
+  `Config/LocalSecrets.xcconfig`, add only tester-owned authorized values, and
+  pass it locally with `xcodebuild -xcconfig Config/LocalSecrets.xcconfig ...`.
+  Do not commit the populated file or include its contents in logs or evidence.
 - Android manifests keep `com.crashlytics.ApiKey` empty in source; populate
   real values through local Fabric tooling or local build configuration only.
 
@@ -66,7 +83,8 @@ The baseline verifies that committed iOS Fabric run scripts use local
 environment variables, Android Crashlytics manifest keys remain placeholders,
 raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
-is skipped before sending and display, Wear notification display targets are
+is skipped before sending and display, unsupported control characters are
+rejected, Wear notification display targets are
 checked before setting tweet text, the notification detail activity is
 internal-only and has no launcher filter, the Wear listener is explicitly
 exported only for the system's `BIND_LISTENER` action, Wear mobile login button
@@ -76,9 +94,14 @@ and Xcode project listing is attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
-GitHub Actions runs this same `make check` baseline on macOS for pushes and
-pull requests, including Xcode project parsing without requiring credentials
-or persisting checkout credentials.
+GitHub Actions installs a checksum-pinned Gitleaks release and runs
+`make security` on macOS for pushes and pull requests, including hostile
+credential fixtures and Xcode project parsing without requiring credentials or
+persisting checkout credentials.
+
+The focused host gates also execute the tweet permalink policy and the pure
+Java Wear message/PendingIntent policy when their compilers are available, and
+verify both Gradle wrapper JARs without executing them.
 
 For functional verification, follow
 [`docs/manual-sample-verification.md`](docs/manual-sample-verification.md) and
@@ -94,6 +117,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter keys/tokens, Android
   keystores, signing identities, `.env`, and `.xcconfig` files out of source
   control.
+- A build with unset TableView credential settings is intentionally inert; do
+  not replace the tracked placeholders with literal values to make it run.
+- Historical Fabric/Twitter credentials were committed publicly. They must be
+  treated as compromised and revoked or deleted in the provider dashboards;
+  see [`docs/credential-incident-response.md`](docs/credential-incident-response.md).
 - Do not log raw tweet objects, Twitter exception messages, or account-specific
   display data from sample apps.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics
@@ -101,9 +129,13 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet messages reject UTF-8 payloads over 1024 bytes before transport or
-  listener decoding.
+  listener decoding, and the listener rejects malformed UTF-8 instead of
+  displaying replacement characters.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
+- Reused Wear notification intents refresh their tweet extra before display so
+  tapping a later notification does not reopen stale content, and are immutable
+  on API 23 and newer.
 - See `docs/manual-sample-verification.md` for per-sample toolchain, build,
   runtime, privacy, destructive-watch-action, cleanup, and evidence boundaries.
 - The Wear listener service is explicitly exported only for Google Play
@@ -119,6 +151,11 @@ When the required SDK or runtime is unavailable, use static checks and source re
   blocked.
 - The iOS TableView sample type-checks loaded TwitterKit objects and replaces
   visible rows atomically so malformed responses cannot crash or duplicate rows.
+- The iOS TableView sample publishes TwitterKit callback state and table updates
+  only on the main queue.
+- The iOS TableView sample requires a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port before opening a selected
+  tweet; exact matching rejects subdomains and suffix lookalikes.
 
 ## Security and Privacy Notes
 
@@ -134,6 +171,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make check` before pushing changes to Android manifests, Xcode project
   files, Fabric/Twitter integration, or credential handling.
+- The full gate can run through an absolute Makefile path from another working
+  directory: `make -f /path/to/FabricWithTwitter/Makefile check`.
 - Android display, mobile, and wear samples keep `android:allowBackup="false"`
   so app data is not opted into platform backup by default.
 - See `SECURITY.md` for vulnerability reporting and safe research guidance.
@@ -152,6 +191,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   mobile tweet display container guard.
 - See `docs/plans/2026-06-10-ci-baseline.md` for the hosted GitHub Actions
   baseline.
+- See `docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md` for the
+  exact iOS Twitter/X navigation host boundary.
 
 ## Contributing
 

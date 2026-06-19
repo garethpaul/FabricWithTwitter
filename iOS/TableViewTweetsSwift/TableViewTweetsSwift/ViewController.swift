@@ -61,30 +61,33 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
         // load tweets with guest login
         Twitter.sharedInstance().logInGuestWithCompletion { (session: TWTRGuestSession!, error: NSError!) in
-            if session == nil {
-                self.isLoadingTweets = false
-                println("Twitter guest login failed")
-                return
-            }
-
-            // Find the tweets with the tweetIDs
-            Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
-                (twttrs, error) -> Void in
-                self.isLoadingTweets = false
-
-                // If there are tweets do something magical
-                if let loadedTweetObjects = twttrs {
-                    var loadedTweets: [TWTRTweet] = []
-                    for i in loadedTweetObjects {
-                        if let tweet = i as? TWTRTweet {
-                            loadedTweets.append(tweet)
-                        }
-                    }
-                    self.tweets = loadedTweets
-                } else {
-                    println("Twitter tweet load failed")
+            dispatch_async(dispatch_get_main_queue()) {
+                if session == nil {
+                    self.isLoadingTweets = false
+                    println("Twitter guest login failed")
+                    return
                 }
 
+                // Find the tweets with the tweetIDs
+                Twitter.sharedInstance().APIClient.loadTweetsWithIDs(tweetIDs) {
+                    (twttrs, error) -> Void in
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.isLoadingTweets = false
+
+                        // If there are tweets do something magical
+                        if let loadedTweetObjects = twttrs {
+                            var loadedTweets: [TWTRTweet] = []
+                            for i in loadedTweetObjects {
+                                if let tweet = i as? TWTRTweet {
+                                    loadedTweets.append(tweet)
+                                }
+                            }
+                            self.tweets = loadedTweets
+                        } else {
+                            println("Twitter tweet load failed")
+                        }
+                    }
+                }
             }
         }
 
@@ -97,12 +100,16 @@ class ViewController: UITableViewController , TWTRTweetViewDelegate {
 
     // MARK: TWTRTweetViewDelegate
     func tweetView(tweetView: TWTRTweetView!, didSelectTweet tweet: TWTRTweet!) {
-        // Display a Web View when selecting the Tweet.
-        let webViewController = UIViewController()
-        let webView = UIWebView(frame: webViewController.view.bounds)
-        webView.loadRequest(NSURLRequest(URL: tweet.permalink))
-        webViewController.view = webView
-        self.navigationController?.pushViewController(webViewController, animated: true)
+        if let permalink = validatedTweetPermalink(tweet?.permalink) {
+            // Display a Web View only for a validated Tweet permalink.
+            let webViewController = UIViewController()
+            let webView = UIWebView(frame: webViewController.view.bounds)
+            webView.loadRequest(NSURLRequest(URL: permalink))
+            webViewController.view = webView
+            self.navigationController?.pushViewController(webViewController, animated: true)
+        } else {
+            println("Tweet permalink was rejected")
+        }
     }
 
     // MARK: UITableViewDataSource

@@ -6,6 +6,22 @@ The supported security scope for `FabricWithTwitter` is the current default bran
 
 Project summary: A simple application that showcases how to integrate Fabric with Twitter
 
+## Confirmed Credential Exposure
+
+Four literal Fabric/Twitter credentials were present in public history: three
+from November 29, 2014 and a Fabric build secret later embedded in a removed
+historical checker. Removing them from the current tree does not revoke them or
+erase old Git objects. The repository owner
+must revoke or delete the affected provider credentials and review provider
+activity; the values must never be copied into an issue, log, test, or review.
+See [`docs/credential-incident-response.md`](docs/credential-incident-response.md)
+for the exact non-secret scope and required owner actions.
+
+`make check` executes the Foundation-only production iOS permalink policy when
+`swiftc` is available, covering canonical Twitter/X hosts, HTTPS, credentials,
+ports, and host lookalikes. Live TwitterKit navigation and device behavior
+remain outside this deterministic boundary.
+
 ## Reporting a Vulnerability
 
 Please report suspected vulnerabilities through GitHub's private vulnerability reporting or by opening a draft GitHub Security Advisory for `garethpaul/FabricWithTwitter` when that option is available. If GitHub does not show a private reporting option for this repository, contact the repository owner through GitHub and avoid posting exploit details publicly until the issue can be assessed.
@@ -31,18 +47,31 @@ Helpful reports include:
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - iOS loaded TwitterKit response objects should be type-checked before they
   replace visible table contents.
+- iOS TwitterKit callback state and visible table publication should occur only
+  on the main queue.
 - Wear tweet loading should skip missing, empty, or whitespace-only tweet text
   before sending messages to the watch sample or displaying notifications.
 - Wear tweet messages should reject UTF-8 payloads over 1024 bytes before mobile
   transport or listener decoding.
+- Wear listener decoding should reject malformed or unmappable UTF-8 before
+  creating notification state.
 - Wear notification display should stay null-safe when legacy layouts drift or
   omit the tweet text view target.
+- Reused Wear notification PendingIntents should update the validated tweet
+  extra so later notifications cannot open stale text and should be immutable
+  on API 23 and newer.
 - The Wear notification detail activity should remain non-exported and without
   intent filters so only the app's explicit notification intent can supply
   tweet text.
 - The Wear listener service must remain explicitly exported because Google Play
   Services binds it for background data-layer delivery. Its manifest filter is
   limited to the single `com.google.android.gms.wearable.BIND_LISTENER` action.
+- The Wear listener service should rely on its framework-managed callback and
+  must not register a parallel `GoogleApiClient` message listener.
+- The iOS TableView sample should require a credential-free HTTPS permalink on
+  canonical Twitter and X hosts with no explicit port and no user information
+  before creating a web request; exact host and tweet-status path matching
+  rejects host lookalikes and non-tweet destinations.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled
@@ -73,6 +102,9 @@ If this project requests device permissions such as location, camera, microphone
 ## Dependency and Supply Chain Security
 
 Dependency updates should come from trusted package managers and should keep lockfiles in sync when lockfiles exist. Do not commit credentials, private keys, tokens, generated secrets, or machine-local configuration. If a vulnerability depends on a compromised package, typosquatting risk, insecure transitive dependency, or unsafe build step, include the package name, affected version, and the path through which it is used.
+
+Android legacy dependency pins prevent unreviewed resolution drift, but the
+retired Fabric, TwitterKit, Gradle, and Wear dependencies remain unsupported.
 
 ## Safe Research Guidelines
 
