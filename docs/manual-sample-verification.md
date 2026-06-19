@@ -25,6 +25,11 @@ responses out of source control and evidence.
   used for each applicable sample.
 - Start from a clean exact-commit checkout. Keep manifest API keys as empty
   placeholders and provide any authorized values through local tooling only.
+- For the iOS TableView sample, copy
+  `Config/LocalSecrets.xcconfig.example` to the ignored
+  `Config/LocalSecrets.xcconfig`, populate it only with tester-owned authorized
+  values, and pass it with `xcodebuild -xcconfig`. Never edit the tracked plist
+  placeholders or retain the populated local file after verification.
 - Android Twitter key/secret constants are also empty in checked-in Java source.
   If runtime testing requires an authorized fixture build, inject tester-owned
   values locally, keep the source change uncommitted, and restore it immediately.

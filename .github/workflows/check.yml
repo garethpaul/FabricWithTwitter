@@ -24,5 +24,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run baseline checks
-        run: make check
+      - name: Run security checks
+        run: |
+          scripts/install-gitleaks.sh "$RUNNER_TEMP/gitleaks-bin"
+          PATH="$RUNNER_TEMP/gitleaks-bin:$PATH" make security

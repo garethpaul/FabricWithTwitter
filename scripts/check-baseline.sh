@@ -39,6 +39,7 @@ require_file() {
 }
 
 for path in \
+  ".gitleaks.toml" \
   ".gitignore" \
   ".github/CODEOWNERS" \
   ".github/workflows/check.yml" \
@@ -47,6 +48,8 @@ for path in \
   "README.md" \
   "SECURITY.md" \
   "VISION.md" \
+  "Config/LocalSecrets.xcconfig.example" \
+  "scripts/install-gitleaks.sh" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
   "Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java" \
   "Android/WearExample/build.gradle" \
@@ -56,6 +59,7 @@ for path in \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
+  "iOS/TableViewTweetsSwift/TableViewTweetsSwift/Info.plist" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/manual-sample-verification.md" \
@@ -78,6 +82,8 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+python3 "$ROOT_DIR/scripts/test-credential-boundary.py"
 
 if grep -R -E './Fabric\.framework/run [0-9a-f]{32,}|~/Downloads/Fabric\.framework/run [0-9a-f]{32,}' "$ROOT_DIR/iOS" --include='project.pbxproj'; then
   printf '%s\n' "iOS Fabric run scripts must not contain committed API keys or build secrets." >&2
@@ -391,9 +397,11 @@ if [ "$(grep -Ec '^permissions:$' "$CI_WORKFLOW")" -ne 1 ] ||
 fi
 
 if [ "$(grep -Ec '^[[:space:]]*(-[[:space:]]+)?run:' "$CI_WORKFLOW")" -ne 1 ] ||
-  ! grep -Eq '^[[:space:]]*run: make check[[:space:]]*$' "$CI_WORKFLOW" ||
+  ! grep -Eq '^[[:space:]]*run: \|[[:space:]]*$' "$CI_WORKFLOW" ||
+  ! grep -Fq 'scripts/install-gitleaks.sh "$RUNNER_TEMP/gitleaks-bin"' "$CI_WORKFLOW" ||
+  ! grep -Fq 'PATH="$RUNNER_TEMP/gitleaks-bin:$PATH" make security' "$CI_WORKFLOW" ||
   grep -Eq 'continue-on-error:[[:space:]]*true|if:[[:space:]]*false' "$CI_WORKFLOW"; then
-  printf '%s\n' "GitHub Actions must run exactly the required Make gate without bypasses." >&2
+  printf '%s\n' "GitHub Actions must install pinned Gitleaks and run the required security gate without bypasses." >&2
   exit 1
 fi
 

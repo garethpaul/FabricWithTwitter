@@ -51,6 +51,12 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in local Gradle/Xcode
   environment settings when exercising Fabric upload behavior. The checked-in
   iOS build phases skip Fabric upload when those variables are absent.
+- The TableView iOS sample keeps `FABRIC_API_KEY`, `TWITTER_CONSUMER_KEY`, and
+  `TWITTER_CONSUMER_SECRET` as inert build-setting placeholders in its tracked
+  plist. Copy `Config/LocalSecrets.xcconfig.example` to the ignored
+  `Config/LocalSecrets.xcconfig`, add only tester-owned authorized values, and
+  pass it locally with `xcodebuild -xcconfig Config/LocalSecrets.xcconfig ...`.
+  Do not commit the populated file or include its contents in logs or evidence.
 - Android manifests keep `com.crashlytics.ApiKey` empty in source; populate
   real values through local Fabric tooling or local build configuration only.
 
@@ -76,9 +82,10 @@ and Xcode project listing is attempted when `xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
-GitHub Actions runs this same `make check` baseline on macOS for pushes and
-pull requests, including Xcode project parsing without requiring credentials
-or persisting checkout credentials.
+GitHub Actions installs a checksum-pinned Gitleaks release and runs
+`make security` on macOS for pushes and pull requests, including hostile
+credential fixtures and Xcode project parsing without requiring credentials or
+persisting checkout credentials.
 
 For functional verification, follow
 [`docs/manual-sample-verification.md`](docs/manual-sample-verification.md) and
@@ -94,6 +101,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Keep `FABRIC_API_KEY`, `FABRIC_BUILD_SECRET`, Twitter keys/tokens, Android
   keystores, signing identities, `.env`, and `.xcconfig` files out of source
   control.
+- A build with unset TableView credential settings is intentionally inert; do
+  not replace the tracked placeholders with literal values to make it run.
 - Do not log raw tweet objects, Twitter exception messages, or account-specific
   display data from sample apps.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics
