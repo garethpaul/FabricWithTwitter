@@ -2,6 +2,7 @@ package samples.twitterkit.fabric.twitter.com.wearexample;
 
 import android.content.Intent;
 import android.app.PendingIntent;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
@@ -9,19 +10,10 @@ import android.util.Log;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-
-
 public class ListenerService extends WearableListenerService {
     private static final String TAG = ListenerService.class.getSimpleName();
     private static final String PATH = "/new_tweet";
     private static final int NOTIFICATION_ID = 1;
-    private static final Charset UTF_8 = Charset.forName("UTF-8");
-    private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;
 
     @Override
     public void onMessageReceived( final MessageEvent messageEvent ) {
@@ -39,19 +31,9 @@ public class ListenerService extends WearableListenerService {
             Log.e(TAG, "Ignoring wear message without tweet payload");
             return;
         }
-        if (messageData.length > MAX_TWEET_PAYLOAD_BYTES) {
-            Log.e(TAG, "Ignoring oversized wear tweet payload");
-            return;
-        }
-
-        String decodedTweet = decodeTweetPayload(messageData);
-        if (decodedTweet == null) {
-            Log.e(TAG, "Ignoring malformed UTF-8 wear tweet payload");
-            return;
-        }
-        String tweet = decodedTweet.trim();
-        if (tweet.length() == 0) {
-            Log.e(TAG, "Ignoring wear message without tweet text");
+        String tweet = WearMessagePolicy.decodeTweetPayload(messageData);
+        if (tweet == null) {
+            Log.e(TAG, "Ignoring invalid wear tweet payload");
             return;
         }
 
@@ -59,7 +41,8 @@ public class ListenerService extends WearableListenerService {
         Intent viewIntent = new Intent(this, NotificationActivity.class);
         viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet);
         PendingIntent viewPendingIntent =
-                PendingIntent.getActivity(this, 0, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                PendingIntent.getActivity(this, 0, viewIntent,
+                        WearMessagePolicy.pendingIntentFlags(Build.VERSION.SDK_INT));
 
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
@@ -76,16 +59,4 @@ public class ListenerService extends WearableListenerService {
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
 
     }
-
-    private static String decodeTweetPayload(byte[] messageData) {
-        CharsetDecoder decoder = UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT);
-        try {
-            return decoder.decode(ByteBuffer.wrap(messageData)).toString();
-        } catch (CharacterCodingException exception) {
-            return null;
-        }
-    }
-
 }

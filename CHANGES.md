@@ -1,5 +1,16 @@
 # Changes
 
+- Removed literal Fabric/Twitter credentials from the tracked TableView plist,
+  added a redacted current-tree secret gate, and documented mandatory
+  provider-side revocation for the credentials that remain exposed in history.
+- Rejected non-status paths on otherwise canonical Twitter/X permalink hosts.
+- Centralized strict Wear payload decoding, Unicode whitespace normalization,
+  control-character rejection, and API-aware immutable notification intents in
+  a pure Java policy with executable tests.
+- Replaced mismatched Gradle 1.6-snapshot wrapper JARs with the reviewed Gradle
+  v2.1 source artifact and added mutation-sensitive provenance checks without
+  executing the legacy wrapper.
+
 ## 2026-06-16
 
 - Extracted the iOS tweet permalink decision into production Foundation source

@@ -44,6 +44,7 @@ WEAR_APP_BUILD="$ROOT_DIR/Android/WearExample/wear/build.gradle"
 DISPLAY_ACTIVITY="$ROOT_DIR/Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java"
 WEAR_MOBILE_ACTIVITY="$ROOT_DIR/Android/WearExample/mobile/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/MainActivity.java"
 WEAR_LISTENER="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java"
+WEAR_POLICY="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/WearMessagePolicy.java"
 WEAR_NOTIFICATION="$ROOT_DIR/Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java"
 WEAR_MANIFEST="$ROOT_DIR/Android/WearExample/wear/src/main/AndroidManifest.xml"
 IOS_TABLE_VIEW="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift"
@@ -62,12 +63,17 @@ for path in \
   ".github/CODEOWNERS" \
   ".github/workflows/check.yml" \
   "CHANGES.md" \
+  "docs/credential-incident-response.md" \
   "Makefile" \
   "README.md" \
   "SECURITY.md" \
   "VISION.md" \
   "Config/LocalSecrets.xcconfig.example" \
   "scripts/install-gitleaks.sh" \
+  "scripts/check-gradle-wrapper-provenance.py" \
+  "scripts/test-gradle-wrapper-provenance.py" \
+  "scripts/run-wear-message-policy-tests.sh" \
+  "Tests/WearMessagePolicyTests.java" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
   "Android/DisplayTweets/app/build.gradle" \
   "Android/DisplayTweets/app/src/main/java/sample/twitterkit/fabric/twitter/com/twitterkit/MainActivity.java" \
@@ -78,6 +84,7 @@ for path in \
   "Android/WearExample/wear/src/main/AndroidManifest.xml" \
   "Android/WearExample/wear/build.gradle" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/ListenerService.java" \
+  "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/WearMessagePolicy.java" \
   "Android/WearExample/wear/src/main/java/samples/twitterkit/fabric/twitter/com/wearexample/NotificationActivity.java" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj" \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/TweetPermalinkPolicy.swift" \
@@ -248,14 +255,16 @@ if ! grep -Fq "absolute Makefile path" "$ROOT_DIR/README.md" ||
   exit 1
 fi
 
-if [ "$(grep -Fc 'PendingIntent.getActivity(this, 0, viewIntent, PendingIntent.FLAG_UPDATE_CURRENT)' "$WEAR_LISTENER")" -ne 1 ] ||
-  grep -Fq 'PendingIntent.getActivity(this, 0, viewIntent, 0)' "$WEAR_LISTENER" ||
+if ! grep -Fq 'WearMessagePolicy.pendingIntentFlags(Build.VERSION.SDK_INT)' "$WEAR_LISTENER" ||
+  ! grep -Fq 'FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE' "$WEAR_POLICY" ||
+  ! grep -Fq 'if (sdkInt >= 23)' "$WEAR_POLICY" ||
   ! grep -Fq 'viewIntent.putExtra(NotificationActivity.TWEET_KEY, tweet)' "$WEAR_LISTENER"; then
-  printf '%s\n' "Wear notification PendingIntent must refresh the latest validated tweet extra." >&2
+  printf '%s\n' "Wear notification PendingIntent must refresh the latest tweet and be immutable where supported." >&2
   exit 1
 fi
 
 python3 "$ROOT_DIR/scripts/test-credential-boundary.py"
+python3 "$ROOT_DIR/scripts/test-gradle-wrapper-provenance.py"
 
 if grep -R -E './Fabric\.framework/run [0-9a-f]{32,}|~/Downloads/Fabric\.framework/run [0-9a-f]{32,}' "$ROOT_DIR/iOS" --include='project.pbxproj'; then
   printf '%s\n' "iOS Fabric run scripts must not contain committed API keys or build secrets." >&2
@@ -422,36 +431,33 @@ fi
 if ! grep -Fq "messageEvent == null || messageEvent.getPath() == null" "$WEAR_LISTENER" ||
   ! grep -Fq "Ignoring unexpected wear path" "$WEAR_LISTENER" ||
   ! grep -Fq "messageData == null || messageData.length == 0" "$WEAR_LISTENER" ||
-  ! grep -Fq 'Charset.forName("UTF-8")' "$WEAR_LISTENER" ||
-  ! grep -Fq "decodeTweetPayload(messageData)" "$WEAR_LISTENER" ||
-  ! grep -Fq "CodingErrorAction.REPORT" "$WEAR_LISTENER" ||
-  ! grep -Fq "CharacterCodingException" "$WEAR_LISTENER" ||
+  ! grep -Fq "WearMessagePolicy.decodeTweetPayload(messageData)" "$WEAR_LISTENER" ||
   grep -Fq "new String(messageData, UTF_8)" "$WEAR_LISTENER" ||
-  ! grep -Fq "tweet.length() == 0" "$WEAR_LISTENER" ||
-  ! grep -Fq "Ignoring wear message without tweet text" "$WEAR_LISTENER"; then
+  ! grep -Fq 'Log.e(TAG, "Ignoring invalid wear tweet payload")' "$WEAR_LISTENER"; then
   printf '%s\n' "Wear listener must guard message path and payload before notification display." >&2
   exit 1
 fi
 
-if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WEAR_LISTENER")" -ne 1 ] ||
-  ! grep -Fq "messageData.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_LISTENER" ||
-  ! grep -Fq 'Log.e(TAG, "Ignoring oversized wear tweet payload")' "$WEAR_LISTENER"; then
-  printf '%s\n' "Wear listener must enforce the reviewed 1024-byte payload limit before decoding." >&2
+if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WEAR_POLICY")" -ne 1 ] ||
+  ! grep -Fq "messageData.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_POLICY" ||
+  ! grep -Fq "containsUnsupportedControlCharacter(normalized)" "$WEAR_POLICY"; then
+  printf '%s\n' "Wear policy must enforce byte, Unicode-whitespace, and control-character boundaries." >&2
   exit 1
 fi
 
-python3 - "$WEAR_MOBILE_ACTIVITY" "$WEAR_LISTENER" <<'PY'
+python3 - "$WEAR_MOBILE_ACTIVITY" "$WEAR_LISTENER" "$WEAR_POLICY" <<'PY'
 import re
 import sys
 from pathlib import Path
 
 sender = Path(sys.argv[1]).read_text()
 listener = Path(sys.argv[2]).read_text()
+policy = Path(sys.argv[3]).read_text()
 
 constant = re.compile(r"private static final int MAX_TWEET_PAYLOAD_BYTES = (\d+);")
 sender_limits = constant.findall(sender)
-listener_limits = constant.findall(listener)
-if sender_limits != ["1024"] or listener_limits != sender_limits:
+policy_limits = constant.findall(policy)
+if sender_limits != ["1024"] or policy_limits != sender_limits:
     raise SystemExit("Wear payload limits must be single, equal 1024-byte constants.")
 
 sender_contract = (
@@ -463,10 +469,8 @@ sender_contract = (
 )
 listener_contract = (
     "messageData == null || messageData.length == 0",
-    "messageData.length > MAX_TWEET_PAYLOAD_BYTES",
-    "decodeTweetPayload(messageData)",
-    "decodedTweet == null",
-    "String tweet = decodedTweet.trim()",
+    "WearMessagePolicy.decodeTweetPayload(messageData)",
+    "tweet == null",
     "new Intent(this, NotificationActivity.class)",
     "notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())",
 )
@@ -480,29 +484,30 @@ for name, source, contract in (
         raise SystemExit(f"Wear {name} payload validation ordering must remain fail-closed.")
 PY
 
-python3 - "$WEAR_LISTENER" <<'PY'
+python3 - "$WEAR_LISTENER" "$WEAR_POLICY" <<'PY'
 import pathlib
 import sys
 
-source = pathlib.Path(sys.argv[1]).read_text()
+listener = pathlib.Path(sys.argv[1]).read_text()
+policy = pathlib.Path(sys.argv[2]).read_text()
 required = (
     "UTF_8.newDecoder()",
     ".onMalformedInput(CodingErrorAction.REPORT)",
     ".onUnmappableCharacter(CodingErrorAction.REPORT)",
     "decoder.decode(ByteBuffer.wrap(messageData)).toString()",
     "catch (CharacterCodingException exception)",
-    'Log.e(TAG, "Ignoring malformed UTF-8 wear tweet payload")',
+    "trimUnicodeWhitespace(decoded)",
+    "containsUnsupportedControlCharacter(normalized)",
 )
-if any(item not in source for item in required):
-    raise SystemExit("Wear listener must reject malformed UTF-8 without replacement decoding")
+if any(item not in policy for item in required):
+    raise SystemExit("Wear policy must reject malformed UTF-8 and unsafe display controls")
 
-decode = source.find("decodeTweetPayload(messageData)")
-decode_failure = source.find("if (decodedTweet == null)", decode)
-trim = source.find("String tweet = decodedTweet.trim()", decode_failure)
-intent = source.find("new Intent(this, NotificationActivity.class)", trim)
-notify = source.find("notificationManager.notify", intent)
-if -1 in (decode, decode_failure, trim, intent, notify) or not (
-    decode < decode_failure < trim < intent < notify
+decode = listener.find("WearMessagePolicy.decodeTweetPayload(messageData)")
+decode_failure = listener.find("if (tweet == null)", decode)
+intent = listener.find("new Intent(this, NotificationActivity.class)", decode_failure)
+notify = listener.find("notificationManager.notify", intent)
+if -1 in (decode, decode_failure, intent, notify) or not (
+    decode < decode_failure < intent < notify
 ):
     raise SystemExit("Strict UTF-8 decoding must precede notification construction and display")
 PY

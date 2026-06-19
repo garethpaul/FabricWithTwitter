@@ -54,6 +54,10 @@ The setup commands above are derived from repository files. Legacy mobile, Pytho
 - Use Android Studio to open the project or run `gradle assembleDebug` when the Android SDK is configured.
 - Android legacy dependency pins remove dynamic selectors while preserving the
   original Gradle, SDK, Fabric, TwitterKit, and Wear API generations.
+- The checked-in Android wrapper JARs are pinned to the reviewed Gradle v2.1
+  source artifact. Before any legacy wrapper execution, independently verify
+  the downloaded `gradle-2.1-all.zip` SHA-256 documented by the provenance
+  checker; CI does not execute these retired builds.
 - Open the Xcode project or workspace in Xcode and run the matching app/sample scheme.
 - Configure `FABRIC_API_KEY` and `FABRIC_BUILD_SECRET` in local Gradle/Xcode
   environment settings when exercising Fabric upload behavior. The checked-in
@@ -79,7 +83,8 @@ The baseline verifies that committed iOS Fabric run scripts use local
 environment variables, Android Crashlytics manifest keys remain placeholders,
 raw tweet/error display logs are avoided, Wear message paths are not logged,
 Wear message payloads are encoded and decoded as UTF-8, blank Wear tweet text
-is skipped before sending and display, Wear notification display targets are
+is skipped before sending and display, unsupported control characters are
+rejected, Wear notification display targets are
 checked before setting tweet text, the notification detail activity is
 internal-only and has no launcher filter, the Wear listener is explicitly
 exported only for the system's `BIND_LISTENER` action, Wear mobile login button
@@ -93,6 +98,10 @@ GitHub Actions installs a checksum-pinned Gitleaks release and runs
 `make security` on macOS for pushes and pull requests, including hostile
 credential fixtures and Xcode project parsing without requiring credentials or
 persisting checkout credentials.
+
+The focused host gates also execute the tweet permalink policy and the pure
+Java Wear message/PendingIntent policy when their compilers are available, and
+verify both Gradle wrapper JARs without executing them.
 
 For functional verification, follow
 [`docs/manual-sample-verification.md`](docs/manual-sample-verification.md) and
@@ -110,6 +119,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   control.
 - A build with unset TableView credential settings is intentionally inert; do
   not replace the tracked placeholders with literal values to make it run.
+- Historical Fabric/Twitter credentials were committed publicly. They must be
+  treated as compromised and revoked or deleted in the provider dashboards;
+  see [`docs/credential-incident-response.md`](docs/credential-incident-response.md).
 - Do not log raw tweet objects, Twitter exception messages, or account-specific
   display data from sample apps.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics
@@ -122,7 +134,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
 - Reused Wear notification intents refresh their tweet extra before display so
-  tapping a later notification does not reopen stale content.
+  tapping a later notification does not reopen stale content, and are immutable
+  on API 23 and newer.
 - See `docs/manual-sample-verification.md` for per-sample toolchain, build,
   runtime, privacy, destructive-watch-action, cleanup, and evidence boundaries.
 - The Wear listener service is explicitly exported only for Google Play

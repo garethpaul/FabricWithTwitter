@@ -6,6 +6,17 @@ The supported security scope for `FabricWithTwitter` is the current default bran
 
 Project summary: A simple application that showcases how to integrate Fabric with Twitter
 
+## Confirmed Credential Exposure
+
+Four literal Fabric/Twitter credentials were present in public history: three
+from November 29, 2014 and a Fabric build secret later embedded in a removed
+historical checker. Removing them from the current tree does not revoke them or
+erase old Git objects. The repository owner
+must revoke or delete the affected provider credentials and review provider
+activity; the values must never be copied into an issue, log, test, or review.
+See [`docs/credential-incident-response.md`](docs/credential-incident-response.md)
+for the exact non-secret scope and required owner actions.
+
 `make check` executes the Foundation-only production iOS permalink policy when
 `swiftc` is available, covering canonical Twitter/X hosts, HTTPS, credentials,
 ports, and host lookalikes. Live TwitterKit navigation and device behavior
@@ -47,7 +58,8 @@ Helpful reports include:
 - Wear notification display should stay null-safe when legacy layouts drift or
   omit the tweet text view target.
 - Reused Wear notification PendingIntents should update the validated tweet
-  extra so later notifications cannot open stale text.
+  extra so later notifications cannot open stale text and should be immutable
+  on API 23 and newer.
 - The Wear notification detail activity should remain non-exported and without
   intent filters so only the app's explicit notification intent can supply
   tweet text.
@@ -58,7 +70,8 @@ Helpful reports include:
   must not register a parallel `GoogleApiClient` message listener.
 - The iOS TableView sample should require a credential-free HTTPS permalink on
   canonical Twitter and X hosts with no explicit port and no user information
-  before creating a web request; exact matching rejects host lookalikes.
+  before creating a web request; exact host and tweet-status path matching
+  rejects host lookalikes and non-tweet destinations.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled

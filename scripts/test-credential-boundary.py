@@ -16,6 +16,7 @@ PLIST = ROOT / "iOS" / "TableViewTweetsSwift" / "TableViewTweetsSwift" / "Info.p
 EXAMPLE_CONFIG = ROOT / "Config" / "LocalSecrets.xcconfig.example"
 GITLEAKS_CONFIG = ROOT / ".gitleaks.toml"
 GITLEAKS_INSTALLER = ROOT / "scripts" / "install-gitleaks.sh"
+INCIDENT_RESPONSE = ROOT / "docs" / "credential-incident-response.md"
 
 
 def run_checker(path: Path) -> subprocess.CompletedProcess[str]:
@@ -99,6 +100,15 @@ class CredentialBoundaryTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_incident_response_requires_provider_revocation(self) -> None:
+        source = INCIDENT_RESPONSE.read_text()
+        normalized = " ".join(source.split())
+        self.assertIn("fa70307f25c152c9958262b36a159393de5aff3d", source)
+        self.assertIn("6dd16a067a57ca8a74c33b1870bca40e1406ff26", source)
+        self.assertIn("Treat all four historical values as publicly disclosed", normalized)
+        self.assertIn("Revoke the exposed Fabric API key/build secret and Twitter consumer key/secret", normalized)
+        self.assertIn("cannot revoke copied credentials", normalized)
 
     def run_gitleaks(self, path: Path) -> subprocess.CompletedProcess[str]:
         return subprocess.run(

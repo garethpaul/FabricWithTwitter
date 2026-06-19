@@ -7,6 +7,7 @@ import sys
 from urllib.parse import urlsplit
 
 CANONICAL_HOSTS = ("twitter.com", "www.twitter.com", "x.com", "www.x.com")
+TWEET_PATH = re.compile(r"^/[A-Za-z0-9_]+/status/[0-9]+/?$")
 
 
 def accepts(url: str) -> bool:
@@ -17,6 +18,7 @@ def accepts(url: str) -> bool:
         and candidate.password is None
         and candidate.port is None
         and candidate.hostname in CANONICAL_HOSTS
+        and TWEET_PATH.fullmatch(candidate.path) is not None
     )
 
 
@@ -41,7 +43,8 @@ def main() -> None:
         "let normalizedScheme = scheme.lowercaseString",
         'normalizedScheme == "https"',
         "let hasCanonicalHost = isCanonicalTweetPermalinkHost",
-        "if hasCanonicalHost",
+        "let hasCanonicalPath = isCanonicalTweetPermalinkPath",
+        "if hasCanonicalHost && hasCanonicalPath",
         "candidate.port == nil",
         "isCanonicalTweetPermalinkHost(candidate.host)",
     )
@@ -88,6 +91,11 @@ def main() -> None:
         "https://evil-twitter.com/example/status/1",
         "https://example.com/twitter/status/1",
         "https:///example/status/1",
+        "https://twitter.com/",
+        "https://twitter.com/example",
+        "https://twitter.com/example/status/not-a-number",
+        "https://twitter.com/example/status/1/analytics",
+        "https://twitter.com/example/lists/status/1",
     )
     if not all(accepts(url) for url in accepted):
         raise SystemExit("Canonical iOS permalink matrix rejected a valid URL")

@@ -54,6 +54,11 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 - Do not log raw Wear message paths or payloads; keep cross-device diagnostics generic.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before sending messages to the watch or displaying watch notifications.
 - Wear notification display verifies that the text view target exists before setting tweet text.
+- Wear notification PendingIntents must remain immutable on API 23 and newer
+  while preserving `FLAG_UPDATE_CURRENT` identity semantics.
+- Never print historical credential values. The values committed in 2014 must
+  be treated as compromised until the repository owner revokes or deletes them
+  with provider access; see `docs/credential-incident-response.md`.
 - Wear notification PendingIntents must refresh the latest validated tweet extra.
 - WearableListenerService owns background message delivery; do not add a
   parallel GoogleApiClient listener registration or cleanup lifecycle.

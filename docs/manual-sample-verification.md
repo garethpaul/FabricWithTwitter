@@ -129,6 +129,9 @@ responses out of source control and evidence.
   captured traffic, screenshots, logs, and build output after verification.
 - Rotate any credential that appears in a transcript, screenshot, log, build
   artifact, or captured request.
+- The credentials identified in `docs/credential-incident-response.md` were
+  publicly committed and require provider-side revocation or application
+  deletion before any live testing. Repository cleanup alone is insufficient.
 
 ## Evidence Record
 
