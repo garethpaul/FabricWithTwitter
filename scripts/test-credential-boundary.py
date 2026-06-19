@@ -143,9 +143,12 @@ class CredentialBoundaryTests(unittest.TestCase):
 
     def test_security_target_requires_gitleaks(self) -> None:
         makefile = (ROOT / "Makefile").read_text()
+        self.assertIn("ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))", makefile)
+        self.assertIn('"$(ROOT)/scripts/check-baseline.sh"', makefile)
         self.assertIn("security: check", makefile)
         self.assertIn("command -v gitleaks", makefile)
-        self.assertIn("gitleaks dir", makefile)
+        self.assertIn('cd "$(ROOT)" && gitleaks dir', makefile)
+        self.assertIn('--config "$(ROOT)/.gitleaks.toml" .', makefile)
 
     def test_ci_installer_is_version_and_checksum_pinned(self) -> None:
         installer = GITLEAKS_INSTALLER.read_text()
