@@ -1,6 +1,6 @@
 .PHONY: build check lint security test
 
-ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+override ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 SWIFTC ?= swiftc
 JAVAC ?= javac
 JAVA ?= java
