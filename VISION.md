@@ -113,6 +113,8 @@ Contribution rules:
   tweet UI layouts.
 - Preserve the Wear mobile destroyed-activity guards at callback, dispatch, and
   reconnect and node-lookup boundaries, plus atomic destruction/send initiation.
+- Preserve DisplayTweets destroyed-activity guards before callback iteration
+  and each activity-backed tweet-view publication.
 - Verify Twitter login/display behavior with local credentials when changing it.
 - Keep `.github/workflows/check.yml` in sync with the local static baseline.
 

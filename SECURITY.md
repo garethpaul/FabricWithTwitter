@@ -52,6 +52,8 @@ Helpful reports include:
 - Wear mobile callbacks and message workers must not reconnect the
   `GoogleApiClient`, continue node lookup, initiate message sends, or publish UI
   after their owning activity is destroyed.
+- DisplayTweets load callbacks must stop before constructing or adding
+  activity-backed tweet views after `MainActivity` destruction.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - iOS loaded TwitterKit response objects should be type-checked before they
   replace visible table contents.

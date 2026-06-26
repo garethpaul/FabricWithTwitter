@@ -53,6 +53,8 @@ responses out of source control and evidence.
 4. Repeat with unavailable/invalid local credentials or inaccessible fixed IDs.
    Confirm the app remains responsive and no sensitive detail is logged.
 5. Confirm app-data backup remains disabled in the installed manifest.
+6. Delay the fixed-ID load callback until after `MainActivity` is destroyed and
+   confirm no compact tweet view is constructed or added to the detached layout.
 
 ## Android Wear Mobile
 

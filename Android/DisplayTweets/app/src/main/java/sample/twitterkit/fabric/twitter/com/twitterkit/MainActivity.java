@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TWITTER_KEY = "";
     private static final String TWITTER_SECRET = "";
+    private volatile boolean activityDestroyed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +48,15 @@ public class MainActivity extends Activity {
         TweetUtils.loadTweets(tweetIds, new LoadCallback<List<Tweet>>() {
             @Override
             public void success(List<Tweet> tweets) {
+                if (activityDestroyed) {
+                    Log.d(TAG, "Skipping tweet callback for destroyed activity");
+                    return;
+                }
                 for (Tweet tweet : tweets) {
+                    if (activityDestroyed) {
+                        Log.d(TAG, "Skipping tweet callback for destroyed activity");
+                        return;
+                    }
                     Log.v(TAG, "Loaded tweet for display");
                     myLayout.addView(new CompactTweetView(MainActivity.this, tweet));
                 }
@@ -58,6 +67,12 @@ public class MainActivity extends Activity {
                 Log.v(TAG, "Tweet load failed");
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        activityDestroyed = true;
+        super.onDestroy();
     }
 
 
