@@ -46,6 +46,8 @@ Current baseline:
 - The iOS TableView sample validates a credential-free HTTPS permalink on
   canonical Twitter and X hosts with no explicit port before selected-tweet
   navigation.
+- Canonical tweet paths accept only ASCII handles and status IDs, rejecting
+  Unicode-wide alphanumeric and decimal lookalikes.
 - The Android Wear mobile sample guards Twitter login button setup and
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container

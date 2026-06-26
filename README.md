@@ -155,7 +155,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   only on the main queue.
 - The iOS TableView sample requires a credential-free HTTPS permalink on
   canonical Twitter and X hosts with no explicit port before opening a selected
-  tweet; exact matching rejects subdomains and suffix lookalikes.
+  tweet; exact matching rejects subdomains and suffix lookalikes, while the
+  path accepts only ASCII handles and status IDs.
 
 ## Security and Privacy Notes
 

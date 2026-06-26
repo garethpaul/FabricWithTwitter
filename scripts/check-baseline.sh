@@ -113,6 +113,8 @@ for path in \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
   "docs/plans/2026-06-18-ios-tweet-permalink-harness-signal-cleanup.md" \
+  "docs/plans/2026-06-25-ios-tweet-permalink-ascii-path-design.md" \
+  "docs/plans/2026-06-25-ios-tweet-permalink-ascii-path.md" \
   "scripts/check-ios-tweet-permalink.py" \
   "scripts/run-ios-tweet-permalink-policy-tests.sh" \
   "Tests/TweetPermalinkPolicyTests/main.swift" \
@@ -123,6 +125,13 @@ for path in \
   "docs/plans/2026-06-08-wear-message-utf8-decoding.md" \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
+done
+
+for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
+  if ! grep -Eq "ASCII handles|Unicode handle lookalikes" "$document"; then
+    printf '%s\n' "$document must document the ASCII iOS tweet permalink path boundary." >&2
+    exit 1
+  fi
 done
 
 python3 "$IOS_TWEET_PERMALINK_CHECK" \
@@ -171,6 +180,8 @@ for value in (
     "https://twitter.com.evil.example/status/1",
     "https://evil-twitter.com/example/status/1",
     "https:///example/status/1",
+    "https://twitter.com/examplе/status/1",
+    "https://twitter.com/example/status/١",
 ):
     if value not in tests:
         raise SystemExit("Executable permalink matrix missing: " + value)

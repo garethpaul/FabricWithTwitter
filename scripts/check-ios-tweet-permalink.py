@@ -44,6 +44,9 @@ def main() -> None:
         'normalizedScheme == "https"',
         "let hasCanonicalHost = isCanonicalTweetPermalinkHost",
         "let hasCanonicalPath = isCanonicalTweetPermalinkPath",
+        "func isASCIITweetHandle",
+        "func isASCIITweetStatusID",
+        "for byte in value.utf8",
         "if hasCanonicalHost && hasCanonicalPath",
         "candidate.port == nil",
         "isCanonicalTweetPermalinkHost(candidate.host)",
@@ -51,6 +54,8 @@ def main() -> None:
     missing = [contract for contract in required if contract not in source]
     if missing:
         raise SystemExit("Missing iOS permalink contracts: " + ", ".join(missing))
+    if "CharacterSet.alphanumerics" in source or "decimalDigitCharacterSet" in source:
+        raise SystemExit("iOS permalink path grammar must not use Unicode-wide character sets")
 
     helper_start = source.find("func isCanonicalTweetPermalinkHost")
     validator_start = source.find("func validatedTweetPermalink", helper_start)
@@ -94,6 +99,8 @@ def main() -> None:
         "https://twitter.com/",
         "https://twitter.com/example",
         "https://twitter.com/example/status/not-a-number",
+        "https://twitter.com/examplе/status/1",
+        "https://twitter.com/example/status/١",
         "https://twitter.com/example/status/1/analytics",
         "https://twitter.com/example/lists/status/1",
     )

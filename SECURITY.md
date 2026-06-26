@@ -71,7 +71,8 @@ Helpful reports include:
 - The iOS TableView sample should require a credential-free HTTPS permalink on
   canonical Twitter and X hosts with no explicit port and no user information
   before creating a web request; exact host and tweet-status path matching
-  rejects host lookalikes and non-tweet destinations.
+  accepts only ASCII handles and status IDs and rejects host lookalikes,
+  Unicode path lookalikes, and non-tweet destinations.
 - Wear mobile tweet display should stay null-safe when legacy layouts drift or
   omit the tweet container target.
 - Android display, mobile, and wear samples should keep app-data backup disabled

@@ -100,6 +100,8 @@ responses out of source control and evidence.
    diagnostics with no raw errors, account details, tweet IDs/text, or objects.
 5. Select a controlled tweet with a credential-free HTTPS permalink on
    canonical Twitter and X hosts with no explicit port and a non-empty host;
+   Confirm only ASCII handles and status IDs are accepted; Unicode lookalikes
+   must be rejected before navigation.
    confirm the in-app web view navigates. With an authorized local fixture,
    verify HTTP, hostless, and credential-bearing permalinks do not create a
    request or navigate. Repeat with explicit-port, unrelated-host, subdomain,

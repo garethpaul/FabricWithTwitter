@@ -1,5 +1,51 @@
 # Changes
 
+## 2026-06-25 - P1 - canonical permalink ASCII path grammar
+
+### Summary
+
+The iOS navigation policy now matches its ASCII-only reference grammar instead
+of accepting Unicode-wide alphanumeric and decimal characters.
+
+### Work completed
+
+- Rejected Unicode handle lookalikes and non-ASCII decimal digits from
+  otherwise canonical Twitter/X tweet permalink paths.
+- Replaced Unicode-wide character sets with exact UTF-8 byte validation for
+  `[A-Za-z0-9_]+` handles and `[0-9]+` status IDs.
+- Added standalone hostile permalink cases and mutation-sensitive source
+  contracts for the production policy.
+
+### Threads
+
+- None; the focused policy change was completed directly.
+
+### Files changed
+
+- `TweetPermalinkPolicy.swift` and its standalone Swift matrix - enforce and execute the ASCII grammar.
+- `scripts/check-ios-tweet-permalink.py` and `scripts/check-baseline.sh` - preserve source, hostile-case, plan, and documentation contracts.
+- Maintainer guidance and design/implementation plans - document the canonical path boundary.
+
+### Validation
+
+- Observed `make check` fail first on the missing production ASCII helpers.
+- All four Make aliases, Python compilation, shell syntax, and diff checks passed locally; local Swift execution was unavailable.
+- Hosted Check run `28212033264` compiled and executed the production Swift policy, passed the Wear policy and 19 Python tests, parsed both Xcode projects, and found no current-tree secrets.
+- CodeQL passed for Actions, Java/Kotlin, and Python on implementation commit `7336934638ea66c9ae433bb922458d70af4003f3`.
+- Codex review could not authenticate; exact-head manual review found no actionable findings.
+
+### Bugs / findings
+
+- P1: Foundation's Unicode-wide character sets admitted canonical-host paths that were not valid ASCII Twitter handle or status-ID grammar.
+
+### Blockers
+
+- No merge blocker remains; retired SDK runtime behavior remains covered only by the documented manual verification matrix.
+
+### Next action
+
+- Re-run hosted checks for this evidence-only head and squash merge if green.
+
 - Removed literal Fabric/Twitter credentials from the tracked TableView plist,
   added a redacted current-tree secret gate, and documented mandatory
   provider-side revocation for the credentials that remain exposed in history.
