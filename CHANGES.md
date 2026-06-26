@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-06-25 - P1 - canonical permalink ASCII path grammar
+
+- Rejected Unicode handle lookalikes and non-ASCII decimal digits from
+  otherwise canonical Twitter/X tweet permalink paths.
+- Replaced Unicode-wide character sets with exact UTF-8 byte validation for
+  `[A-Za-z0-9_]+` handles and `[0-9]+` status IDs.
+- Added standalone hostile permalink cases and mutation-sensitive source
+  contracts for the production policy.
+
 - Removed literal Fabric/Twitter credentials from the tracked TableView plist,
   added a redacted current-tree secret gate, and documented mandatory
   provider-side revocation for the credentials that remain exposed in history.

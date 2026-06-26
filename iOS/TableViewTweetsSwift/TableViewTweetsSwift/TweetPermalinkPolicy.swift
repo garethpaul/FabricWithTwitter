@@ -16,6 +16,31 @@ func isCanonicalTweetPermalinkHost(host: String?) -> Bool {
     return false
 }
 
+func isASCIITweetHandle(value: String) -> Bool {
+    var hasByte = false
+    for byte in value.utf8 {
+        hasByte = true
+        let isDigit = byte >= 0x30 && byte <= 0x39
+        let isUppercaseLetter = byte >= 0x41 && byte <= 0x5A
+        let isLowercaseLetter = byte >= 0x61 && byte <= 0x7A
+        if !isDigit && !isUppercaseLetter && !isLowercaseLetter && byte != 0x5F {
+            return false
+        }
+    }
+    return hasByte
+}
+
+func isASCIITweetStatusID(value: String) -> Bool {
+    var hasByte = false
+    for byte in value.utf8 {
+        hasByte = true
+        if byte < 0x30 || byte > 0x39 {
+            return false
+        }
+    }
+    return hasByte
+}
+
 func isCanonicalTweetPermalinkPath(path: String?) -> Bool {
     if let path = path {
 #if EXECUTABLE_POLICY_TESTS
@@ -41,17 +66,11 @@ func isCanonicalTweetPermalinkPath(path: String?) -> Bool {
 #endif
 
 #if EXECUTABLE_POLICY_TESTS
-        var handleCharacters = CharacterSet.alphanumerics
-        handleCharacters.insert(charactersIn: "_")
-        let invalidHandleCharacters = handleCharacters.inverted
-        let invalidStatusCharacters = CharacterSet.decimalDigits.inverted
-        return components[1].rangeOfCharacter(from: invalidHandleCharacters) == nil &&
-            components[3].rangeOfCharacter(from: invalidStatusCharacters) == nil
+        return isASCIITweetHandle(value: components[1]) &&
+            isASCIITweetStatusID(value: components[3])
 #else
-        let handleCharacters = NSMutableCharacterSet.alphanumericCharacterSet()
-        handleCharacters.addCharactersInString("_")
-        return components[1].rangeOfCharacterFromSet(handleCharacters.invertedSet) == nil &&
-            components[3].rangeOfCharacterFromSet(NSCharacterSet.decimalDigitCharacterSet().invertedSet) == nil
+        return isASCIITweetHandle(components[1]) &&
+            isASCIITweetStatusID(components[3])
 #endif
     }
 

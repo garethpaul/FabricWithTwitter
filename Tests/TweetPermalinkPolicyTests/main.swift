@@ -36,6 +36,8 @@ expect("https:///example/status/1", accepted: false, "hostless URL")
 expect("https://twitter.com/", accepted: false, "host root is not a tweet permalink")
 expect("https://twitter.com/example", accepted: false, "profile URL is not a tweet permalink")
 expect("https://twitter.com/example/status/not-a-number", accepted: false, "non-numeric status ID")
+expect("https://twitter.com/examplе/status/1", accepted: false, "Cyrillic handle lookalike")
+expect("https://twitter.com/example/status/١", accepted: false, "non-ASCII status digits")
 expect("https://twitter.com/example/status/1/analytics", accepted: false, "extra path component")
 expect("https://twitter.com/example/lists/status/1", accepted: false, "misplaced status component")
 
