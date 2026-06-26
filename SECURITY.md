@@ -70,6 +70,7 @@ Helpful reports include:
 - Reused Wear notification PendingIntents should update the validated tweet
   extra so later notifications cannot open stale text and should be immutable
   on API 23 and newer.
+- Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text.
 - The Wear notification detail activity should remain non-exported and without
   intent filters so only the app's explicit notification intent can supply
   tweet text.

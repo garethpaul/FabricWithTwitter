@@ -63,6 +63,7 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   be treated as compromised until the repository owner revokes or deletes them
   with provider access; see `docs/credential-incident-response.md`.
 - Wear notification PendingIntents must refresh the latest validated tweet extra.
+- Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text.
 - WearableListenerService owns background message delivery; do not add a
   parallel GoogleApiClient listener registration or cleanup lifecycle.
 - Wear mobile callbacks and message workers must reject work after

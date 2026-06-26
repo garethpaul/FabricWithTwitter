@@ -32,7 +32,8 @@ final class WearMessagePolicy {
         }
 
         String normalized = trimUnicodeWhitespace(decoded);
-        if (normalized.length() == 0 || containsUnsupportedControlCharacter(normalized)) {
+        if (normalized.length() == 0 || containsUnsupportedControlCharacter(normalized)
+                || containsBidiControlCharacter(normalized)) {
             return null;
         }
         return normalized;
@@ -68,6 +69,20 @@ final class WearMessagePolicy {
                     character != '\n' && character != '\r' && character != '\t') {
                 return true;
             }
+        }
+        return false;
+    }
+
+    private static boolean containsBidiControlCharacter(String value) {
+        for (int index = 0; index < value.length();) {
+            int codePoint = value.codePointAt(index);
+            if (codePoint == 0x061C
+                    || (codePoint >= 0x200E && codePoint <= 0x200F)
+                    || (codePoint >= 0x202A && codePoint <= 0x202E)
+                    || (codePoint >= 0x2066 && codePoint <= 0x2069)) {
+                return true;
+            }
+            index += Character.charCount(codePoint);
         }
         return false;
     }
