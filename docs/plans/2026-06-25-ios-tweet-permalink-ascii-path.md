@@ -46,3 +46,5 @@
 - `make check` failed first because the required production ASCII helpers were absent.
 - All four Make aliases pass with exact byte-range source contracts and hostile Unicode URL cases.
 - Python compilation and `git diff --check` pass locally; standalone Swift execution remains a hosted requirement because `swiftc` is unavailable locally.
+- Hosted Check run `28212033264` compiled and executed the production Swift policy, passed the complete baseline and secret scan, and all CodeQL languages passed on commit `7336934638ea66c9ae433bb922458d70af4003f3`.
+- The Codex review helper could not authenticate; exact-head manual review found no actionable findings.
