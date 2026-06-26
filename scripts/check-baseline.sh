@@ -35,6 +35,9 @@ IOS_TWEET_PERMALINK_TEST="$ROOT_DIR/Tests/TweetPermalinkPolicyTests/main.swift"
 IOS_TABLE_PROJECT="$ROOT_DIR/iOS/TableViewTweetsSwift/TableViewTweetsSwift.xcodeproj/project.pbxproj"
 IOS_TWITTER_MAIN_QUEUE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-twitter-main-queue.md"
 SAMPLE_VERIFICATION="$ROOT_DIR/docs/manual-sample-verification.md"
+MODERN_ALTERNATIVES_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-modern-platform-alternatives-design.md"
+MODERN_ALTERNATIVES_PLAN="$ROOT_DIR/docs/plans/2026-06-25-modern-platform-alternatives.md"
+MODERN_ALTERNATIVES_GUIDE="$ROOT_DIR/docs/modern-platform-alternatives.md"
 CI_WORKFLOW="$ROOT_DIR/.github/workflows/check.yml"
 CODEOWNERS="$ROOT_DIR/.github/CODEOWNERS"
 WEAR_BUILD="$ROOT_DIR/Android/WearExample/build.gradle"
@@ -92,6 +95,7 @@ for path in \
   "iOS/TableViewTweetsSwift/TableViewTweetsSwift/ViewController.swift" \
   "iOS/WatchSample/WatchSample.xcodeproj/project.pbxproj" \
   "docs/manual-sample-verification.md" \
+  "docs/modern-platform-alternatives.md" \
   "docs/plans/2026-06-09-ios-twitter-load-inflight-reset.md" \
   "docs/plans/2026-06-10-ios-twitter-tweet-type-guard.md" \
   "docs/plans/2026-06-09-wear-login-button-guard.md" \
@@ -115,6 +119,8 @@ for path in \
   "docs/plans/2026-06-18-ios-tweet-permalink-harness-signal-cleanup.md" \
   "docs/plans/2026-06-25-ios-tweet-permalink-ascii-path-design.md" \
   "docs/plans/2026-06-25-ios-tweet-permalink-ascii-path.md" \
+  "docs/plans/2026-06-25-modern-platform-alternatives-design.md" \
+  "docs/plans/2026-06-25-modern-platform-alternatives.md" \
   "scripts/check-ios-tweet-permalink.py" \
   "scripts/run-ios-tweet-permalink-policy-tests.sh" \
   "Tests/TweetPermalinkPolicyTests/main.swift" \
@@ -126,6 +132,37 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+for modern_alternative_contract in \
+  "Firebase Crashlytics" \
+  "https://firebase.google.com/docs/crashlytics/get-started" \
+  "OAuth 2.0 Authorization Code Flow with PKCE" \
+  "https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code" \
+  "X API v2" \
+  "https://docs.x.com/x-api/posts/lookup/introduction" \
+  "https://docs.x.com/x-api/users/lookup/introduction" \
+  "Wear OS Data Layer" \
+  "https://developer.android.com/training/wearables/data/overview" \
+  "does not migrate the historical samples" \
+  "Staged Migration" \
+  "Validation Gates"; do
+  if ! grep -Fq "$modern_alternative_contract" "$MODERN_ALTERNATIVES_GUIDE"; then
+    printf '%s\n' "Modern alternatives guide must retain: $modern_alternative_contract" >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "status: approved" "$MODERN_ALTERNATIVES_DESIGN" ||
+  ! grep -Fq "status: completed" "$MODERN_ALTERNATIVES_PLAN" ||
+  ! grep -Fq "docs/modern-platform-alternatives.md" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "docs/modern-platform-alternatives.md" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "docs/modern-platform-alternatives.md" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "docs/modern-platform-alternatives.md" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "Documented modern alternatives" "$ROOT_DIR/CHANGES.md" ||
+  grep -Fq -- "- Document modern alternatives to Fabric/TwitterKit" "$ROOT_DIR/VISION.md"; then
+  printf '%s\n' "Modern alternatives documentation and repository guidance must stay synchronized." >&2
+  exit 1
+fi
 
 for document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/CHANGES.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
   if ! grep -Eq "ASCII handles|Unicode handle lookalikes" "$document"; then

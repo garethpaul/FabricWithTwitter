@@ -32,6 +32,9 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 
 - Preserve the existing Java and Swift style; avoid broad SDK modernization in
   changes intended only to maintain the historical samples.
+- Read `docs/modern-platform-alternatives.md` before proposing replacement
+  services. Keep crash reporting, authentication, content lookup, and Wear
+  transport in separate, evidence-backed changes.
 
 ## Testing guidance
 

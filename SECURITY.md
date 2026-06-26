@@ -40,6 +40,11 @@ Helpful reports include:
 
 ## Project Security Posture
 
+- Modernization proposals must follow the credential, redirect, token, logging,
+  and staged-validation boundaries in `docs/modern-platform-alternatives.md`.
+  That guide maps the retired integrations to current services but does not
+  make the historical samples production-ready or authorize committing
+  provider configuration and secrets.
 - This repository appears to be an Android mobile application or sample. The active security scope is the code and documentation on the default branch.
 - Review found authentication, token, or session-related code paths; changes in those areas should receive security-focused review before merge.
 - Wear mobile Twitter login button setup and activity-result forwarding should

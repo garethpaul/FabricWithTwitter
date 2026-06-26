@@ -1,5 +1,61 @@
 # Changes
 
+## 2026-06-25 - P2 - modern platform alternatives
+
+### Summary
+
+Documented modern alternatives to the retired Fabric, TwitterKit, and legacy
+Wear capabilities without rewriting or making runtime claims about the
+historical samples.
+
+### Work completed
+
+- Mapped Fabric crash reporting to Firebase Crashlytics, TwitterKit login and
+  data access to X OAuth 2.0 PKCE and X API v2, and wearable transport to the
+  current Wear OS Data Layer.
+- Preserved the validated HTTPS permalink as the credential-free browser
+  fallback and carried forward existing secret, logging, UTF-8, payload-size,
+  and listener-lifecycle boundaries.
+- Defined staged migration and validation gates so future provider changes can
+  be reviewed independently against primary documentation.
+
+### Threads
+
+- None; the focused documentation change was completed directly.
+
+### Files changed
+
+- `docs/modern-platform-alternatives.md` - capability map, security boundaries,
+  migration stages, validation gates, and official provider references.
+- `scripts/check-baseline.sh` - documentation and roadmap synchronization
+  contracts.
+- Maintainer guidance and design/implementation plans - link and preserve the
+  new migration-planning boundary.
+
+### Validation
+
+- Observed `make check` fail first because the required guide was absent.
+- All four Make aliases and absolute-Makefile `make check` passed locally;
+  Swift execution and Xcode project listing remain hosted requirements here.
+- Shell syntax, Python compilation, diff whitespace, generated-artifact, and
+  high-confidence credential-pattern audits passed.
+
+### Bugs / findings
+
+- P2: The repository identified the integrations as retired but did not map
+  their responsibilities to current platform capabilities.
+
+### Blockers
+
+- No documentation blocker remains. Any implementation still requires current
+  provider access, supported toolchains, maintainer-owned credentials, and
+  device/service validation.
+
+### Next action
+
+- Keep the legacy dependency pins stable while scoping one separately verified
+  modernization stage at a time.
+
 ## 2026-06-25 - P1 - canonical permalink ASCII path grammar
 
 ### Summary
