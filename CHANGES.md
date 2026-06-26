@@ -1,5 +1,70 @@
 # Changes
 
+## 2026-06-26 06:21 PDT - P1 - Stop destroyed DisplayTweets callbacks
+
+### Summary
+
+Prevented delayed Android DisplayTweets success callbacks from constructing or
+adding activity-backed tweet views after `MainActivity` destruction.
+
+### Work completed
+
+- Added an activity-owned volatile destruction signal.
+- Rejected delayed callbacks before tweet iteration and rechecked before every
+  `CompactTweetView` construction/addition.
+- Published destruction before superclass teardown.
+- Added fail-closed source ordering contracts, design/implementation records,
+  synchronized maintainer guidance, and a manual runtime scenario.
+
+### Threads
+
+- Started: None — the retired callback API and lifecycle owner were local to one
+  activity.
+- Continued: None.
+- Stopped: None.
+
+### Files changed
+
+- Android DisplayTweets `MainActivity.java` — adds destroyed-activity callback
+  guards.
+- `scripts/check-baseline.sh` — enforces signal, callback, per-item, and teardown
+  ordering.
+- `README.md`, `SECURITY.md`, `VISION.md`, `AGENTS.md`, and
+  `docs/manual-sample-verification.md` — document the lifecycle boundary.
+- `docs/plans/2026-06-26-display-destroyed-callback*.md` — record the decision
+  and implementation evidence.
+
+### Validation
+
+- RED baseline — failed on the missing volatile destruction signal.
+- GREEN baseline — passed after callback and teardown guards were added.
+- Initial synchronized-doc runs — exposed line wrapping and an arbitrary phrase
+  distance cap; the contract now normalizes whitespace without that cap.
+- `make check`, `make lint`, `make test`, `make build`, and external-directory
+  `make -f ... check` — passed the Java policy harness, 19 Python tests, and
+  full baseline; unavailable Swift/Xcode checks skipped truthfully.
+- Maintained shell/Python syntax and `git diff --check` — passed.
+- The first hostile-mutation harness assumed identical nested indentation and
+  stopped before testing; corrected fixtures then rejected both callback-entry
+  and per-item guard removals with the intended diagnostic.
+- Hosted checks and exact-head review remain pending.
+
+### Bugs / findings
+
+- P1 lifecycle correctness: a TwitterKit callback could update a detached
+  activity UI after destruction, with no cancellation handle available in the
+  retired sample API.
+
+### Blockers
+
+- Compatible historical TwitterKit/Android runtime execution remains a manual
+  verification boundary.
+
+### Next action
+
+- Open the focused PR, run hosted gates and exact-head review, then merge only
+  the reviewed green head.
+
 ## 2026-06-25 21:32 PDT - P1 - Stop Wear sends after destruction
 
 ### Summary

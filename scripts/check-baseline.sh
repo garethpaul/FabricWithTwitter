@@ -28,6 +28,8 @@ WEAR_DESTROYED_ACTIVITY_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-a
 WEAR_DESTROYED_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-activity-callback.md"
 WEAR_DESTROYED_NODE_SEND_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-wear-destroyed-node-send-race-design.md"
 WEAR_DESTROYED_NODE_SEND_PLAN="$ROOT_DIR/docs/plans/2026-06-26-wear-destroyed-node-send-race.md"
+DISPLAY_DESTROYED_CALLBACK_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-display-destroyed-callback-design.md"
+DISPLAY_DESTROYED_CALLBACK_PLAN="$ROOT_DIR/docs/plans/2026-06-26-display-destroyed-callback.md"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
@@ -121,6 +123,8 @@ for path in \
   "docs/plans/2026-06-25-wear-destroyed-activity-callback.md" \
   "docs/plans/2026-06-26-wear-destroyed-node-send-race-design.md" \
   "docs/plans/2026-06-26-wear-destroyed-node-send-race.md" \
+  "docs/plans/2026-06-26-display-destroyed-callback-design.md" \
+  "docs/plans/2026-06-26-display-destroyed-callback.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
@@ -140,6 +144,43 @@ for path in \
   "docs/plans/2026-06-08-fabric-with-twitter-security-baseline.md"; do
   require_file "$path"
 done
+
+python3 - "$DISPLAY_ACTIVITY" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+required = (
+    "private volatile boolean activityDestroyed;",
+    "if (activityDestroyed) {",
+    'Log.d(TAG, "Skipping tweet callback for destroyed activity");',
+    "activityDestroyed = true;",
+    "protected void onDestroy()",
+)
+for contract in required:
+    if contract not in source:
+        raise SystemExit("DisplayTweets destroyed-activity guard missing: " + contract)
+
+callback = source.split("public void success(List<Tweet> tweets)", 1)[1].split(
+    "public void failure(TwitterException exception)", 1
+)[0]
+guards = [
+    index for index in range(len(callback))
+    if callback.startswith("if (activityDestroyed)", index)
+]
+loop = callback.find("for (Tweet tweet : tweets)")
+view = callback.find("new CompactTweetView")
+if len(guards) < 2 or not (guards[0] < loop < guards[1] < view):
+    raise SystemExit("DisplayTweets callback must guard before iteration and activity-backed view creation")
+
+destroy = source.split("protected void onDestroy()", 1)[1].split(
+    "public boolean onCreateOptionsMenu", 1
+)[0]
+destroyed = destroy.find("activityDestroyed = true;")
+super_destroy = destroy.find("super.onDestroy()")
+if min(destroyed, super_destroy) < 0 or destroyed > super_destroy:
+    raise SystemExit("DisplayTweets must publish destruction before superclass teardown")
+PY
 
 for modern_alternative_contract in \
   "Firebase Crashlytics" \
@@ -735,6 +776,21 @@ done
 for lifecycle_document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
   if ! grep -Eq "destroyed|destruction" "$lifecycle_document"; then
     printf '%s\n' "$lifecycle_document must document the Wear mobile destroyed-activity boundary." >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "status: approved" "$DISPLAY_DESTROYED_CALLBACK_DESIGN" ||
+  ! grep -Fq "status: completed" "$DISPLAY_DESTROYED_CALLBACK_PLAN" ||
+  ! grep -Fq "per-item" "$DISPLAY_DESTROYED_CALLBACK_PLAN"; then
+  printf '%s\n' "DisplayTweets destroyed-callback plans must preserve completed lifecycle evidence." >&2
+  exit 1
+fi
+
+for display_lifecycle_document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION" "$ROOT_DIR/CHANGES.md"; do
+  normalized_display_lifecycle=$(tr '\n' ' ' < "$display_lifecycle_document")
+  if ! printf '%s\n' "$normalized_display_lifecycle" | grep -Eq "DisplayTweets.*(destroyed|destruction)"; then
+    printf '%s\n' "$display_lifecycle_document must document the DisplayTweets destroyed-activity boundary." >&2
     exit 1
   fi
 done

@@ -96,6 +96,8 @@ exported only for the system's `BIND_LISTENER` action, Wear mobile login button
 handling is null-safe, Wear mobile tweet display verifies that its container
 view exists before adding a `TweetView`, delayed callbacks cannot reconnect the
 Wear client or update UI after the mobile activity is destroyed, local
+DisplayTweets callbacks cannot add compact tweet views after their activity is
+destroyed, local
 credential files stay ignored, and Xcode project listing is attempted when
 `xcodebuild` is installed.
 

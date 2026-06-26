@@ -69,6 +69,8 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   `MainActivity` destruction; if destruction races `blockingConnect`, disconnect
   before returning. Recheck after connected-node lookup, and keep destruction
   publication atomic with each node send initiation.
+- DisplayTweets callbacks must reject activity-backed tweet view construction
+  after their `MainActivity` owner is destroyed.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.
