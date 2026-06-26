@@ -67,7 +67,8 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
   parallel GoogleApiClient listener registration or cleanup lifecycle.
 - Wear mobile callbacks and message workers must reject work after
   `MainActivity` destruction; if destruction races `blockingConnect`, disconnect
-  before returning.
+  before returning. Recheck after connected-node lookup, and keep destruction
+  publication atomic with each node send initiation.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.

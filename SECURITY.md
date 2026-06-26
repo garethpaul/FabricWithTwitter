@@ -50,7 +50,8 @@ Helpful reports include:
 - Wear mobile Twitter login button setup and activity-result forwarding should
   stay null-safe when legacy layouts drift.
 - Wear mobile callbacks and message workers must not reconnect the
-  `GoogleApiClient` or publish UI after their owning activity is destroyed.
+  `GoogleApiClient`, continue node lookup, initiate message sends, or publish UI
+  after their owning activity is destroyed.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - iOS loaded TwitterKit response objects should be type-checked before they
   replace visible table contents.

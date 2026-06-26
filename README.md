@@ -153,7 +153,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
   exists before adding a TwitterKit `TweetView`.
 - The Android Wear mobile sample rejects delayed login, tweet, and message work
   after activity destruction and disconnects a client if destruction races a
-  blocking reconnect.
+  blocking reconnect. Node lookup and every node send recheck destruction so
+  work already past reconnect cannot start a new send after teardown begins.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest
