@@ -1,5 +1,57 @@
 # Changes
 
+## 2026-06-25 21:32 PDT - P1 - Stop Wear sends after destruction
+
+### Summary
+
+Closed the remaining Wear mobile lifecycle race so activity destruction during
+node lookup or between node sends stops further use of the activity-owned
+`GoogleApiClient`.
+
+### Work completed
+
+- Rechecked the volatile destruction signal after connected-node lookup.
+- Serialized destruction publication with every node send initiation so a
+  multi-node loop cannot start another send after `onDestroy` owns the client.
+- Strengthened the source contract for both asynchronous handoffs and documented
+  the focused lifecycle decision.
+
+### Threads
+
+- None; the focused fix was investigated, implemented, and reviewed directly.
+
+### Files changed
+
+- Wear mobile `MainActivity` - stop node iteration and message delivery after
+  activity destruction.
+- Baseline, plans, and maintainer guidance - preserve the new guard ordering.
+
+### Validation
+
+- RED: `./scripts/check-baseline.sh` rejected the missing post-lookup and
+  pre-send guards.
+- GREEN: the focused baseline passed after adding the post-lookup guard and
+  atomic lifecycle-check/send boundary.
+- `make check` passed the executable Wear policy, Python suites, and baseline;
+  Swift and Xcode execution skipped because those tools are unavailable locally.
+- Hostile removal of the post-lookup guard or per-send lifecycle boundary failed
+  with the expected lifecycle-ordering diagnostic.
+- Shell syntax and `git diff --check` passed.
+
+### Bugs / findings
+
+- P1: destruction after the post-connect check could still race node lookup or
+  later loop iterations and allow a send on a disconnected activity-owned client.
+
+### Blockers
+
+- Retired TwitterKit/Wear runtime behavior remains a hosted or manual validation
+  boundary.
+
+### Next action
+
+- Open a focused pull request, run exact-head review, and merge after hosted gates.
+
 ## 2026-06-25 - P1 - Wear activity callback ownership
 
 ### Summary

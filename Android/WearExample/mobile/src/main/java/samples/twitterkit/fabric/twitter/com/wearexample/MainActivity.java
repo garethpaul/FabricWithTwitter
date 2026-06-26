@@ -9,6 +9,7 @@ import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
@@ -38,6 +39,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     private GoogleApiClient client;
     private TwitterLoginButton loginButton;
     private volatile boolean activityDestroyed;
+    private final Object activityLifecycleLock = new Object();
 
     private static final String PATH = "/new_tweet";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -182,9 +184,21 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 }
 
                 NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(messageClient).await();
+                if (activityDestroyed) {
+                    Log.d(TAG, "Skipping wear message for destroyed activity");
+                    return;
+                }
                 for (Node node : nodes.getNodes()) {
-                    MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(
-                            messageClient, node.getId(), path, tweetPayload).await();
+                    final PendingResult<MessageApi.SendMessageResult> pendingResult;
+                    synchronized (activityLifecycleLock) {
+                        if (activityDestroyed) {
+                            Log.d(TAG, "Skipping wear message for destroyed activity");
+                            return;
+                        }
+                        pendingResult = Wearable.MessageApi.sendMessage(
+                                messageClient, node.getId(), path, tweetPayload);
+                    }
+                    MessageApi.SendMessageResult result = pendingResult.await();
                 }
             }
         }).start();
@@ -193,9 +207,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     @Override
     protected void onDestroy() {
-        activityDestroyed = true;
-        if (client != null && (client.isConnected() || client.isConnecting())) {
-            client.disconnect();
+        synchronized (activityLifecycleLock) {
+            activityDestroyed = true;
+            if (client != null && (client.isConnected() || client.isConnecting())) {
+                client.disconnect();
+            }
         }
         super.onDestroy();
     }

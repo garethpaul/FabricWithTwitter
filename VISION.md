@@ -54,7 +54,7 @@ Current baseline:
   exists before adding a TwitterKit `TweetView`.
 - The Android Wear mobile sample rejects delayed callback and message work after
   destruction so its activity-owned Wear client cannot be reconnected or used
-  to update dead UI.
+  for node lookup, new message sends, or dead-UI updates.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet payloads are bounded to 1024 UTF-8 bytes before send and decode.
@@ -112,7 +112,7 @@ Contribution rules:
 - Preserve Wear mobile tweet display container guards when changing legacy
   tweet UI layouts.
 - Preserve the Wear mobile destroyed-activity guards at callback, dispatch, and
-  reconnect boundaries.
+  reconnect and node-lookup boundaries, plus atomic destruction/send initiation.
 - Verify Twitter login/display behavior with local credentials when changing it.
 - Keep `.github/workflows/check.yml` in sync with the local static baseline.
 
