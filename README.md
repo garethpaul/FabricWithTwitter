@@ -140,6 +140,7 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - Wear tweet messages reject UTF-8 payloads over 1024 bytes before transport or
   listener decoding, and the listener rejects malformed UTF-8 instead of
   displaying replacement characters.
+- Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text.
 - Wear notification display verifies that the text view target exists before
   setting tweet text.
 - Reused Wear notification intents refresh their tweet extra before display so

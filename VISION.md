@@ -63,6 +63,7 @@ Current baseline:
 - Wear notification display verifies that its text view target exists before
   setting tweet text.
 - Wear notification PendingIntents refresh the latest validated tweet extra.
+- Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text.
 - The Wear notification detail activity is internal-only and has no launcher
   intent filter; explicit app notifications remain its only entry path.
 - The Wear listener service declares its required system-binding export

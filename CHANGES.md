@@ -1,5 +1,54 @@
 # Changes
 
+## 2026-06-26 10:30 PDT - P2 - Reject Wear bidi-control payloads
+
+### Summary
+
+The Wear payload policy now rejects Unicode bidirectional controls before
+untrusted tweet text reaches notifications or the detail activity.
+
+### Work completed
+
+- Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text.
+- Added exact Unicode 17 `Bidi_Control` ranges without rejecting all format
+  characters or rewriting accepted text.
+- Added behavioral coverage for all property groups and a ZWJ preservation case.
+- Added an isolated hostile mutation, durable plans, and synchronized guidance.
+
+### Threads
+
+- Started: Wear notification display audit — trace payload decode to UI.
+- Continued: strict UTF-8 and byte-limit policy — preserved existing boundaries.
+- Stopped: all-format-character rejection — it would break legitimate ZWJ emoji.
+
+### Files changed
+
+- `WearMessagePolicy.java` — rejects exact bidi-control code points.
+- `WearMessagePolicyTests.java` and `scripts/` — execute behavior and mutation proof.
+- Maintained docs and plans — record scope, evidence, and residual boundaries.
+
+### Validation
+
+- Red-first Wear policy test — failed on `U+061C`, then passed after implementation.
+- Bidi-control hostile mutation — rejected by the behavioral harness.
+- Repository and external-Makefile `make check`, shell syntax, and diff checks passed.
+- `make security` passed the baseline and gitleaks scan with no findings.
+- `swiftc` and `xcodebuild` remain unavailable locally; hosted macOS checks are required.
+
+### Bugs / findings
+
+- P2: valid UTF-8 containing bidi controls could visually reorder notification
+  and activity text despite existing ISO-control rejection.
+
+### Blockers
+
+- Live Wear notification rendering and Twitter/Fabric services remain external
+  manual verification boundaries.
+
+### Next action
+
+- Run complete local and hosted exact-head verification, review, and merge.
+
 ## 2026-06-26 06:21 PDT - P1 - Stop destroyed DisplayTweets callbacks
 
 ### Summary

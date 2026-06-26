@@ -12,6 +12,11 @@ public final class WearMessagePolicyTests {
         expectRejected("\u00a0\u2007".getBytes(UTF_8), "Unicode whitespace only");
         expectRejected("hello\u0000world".getBytes(UTF_8), "NUL control character");
         expectRejected("hello\u0085world".getBytes(UTF_8), "C1 control character");
+        expectRejected("hello\u061cworld".getBytes(UTF_8), "Arabic letter mark");
+        expectRejected("hello\u200eworld".getBytes(UTF_8), "left-to-right mark");
+        expectRejected("hello\u202eworld".getBytes(UTF_8), "right-to-left override");
+        expectRejected("hello\u2066world".getBytes(UTF_8), "left-to-right isolate");
+        expectText("hello\u200dworld", "hello\u200dworld", "zero-width joiner");
         expectText("hello\nworld", "hello\nworld", "line break");
 
         int updateCurrent = 0x08000000;

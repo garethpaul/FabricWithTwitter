@@ -30,6 +30,9 @@ WEAR_DESTROYED_NODE_SEND_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-wear-destroyed-
 WEAR_DESTROYED_NODE_SEND_PLAN="$ROOT_DIR/docs/plans/2026-06-26-wear-destroyed-node-send-race.md"
 DISPLAY_DESTROYED_CALLBACK_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-display-destroyed-callback-design.md"
 DISPLAY_DESTROYED_CALLBACK_PLAN="$ROOT_DIR/docs/plans/2026-06-26-display-destroyed-callback.md"
+WEAR_BIDI_CONTROL_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-wear-bidi-control-payload-design.md"
+WEAR_BIDI_CONTROL_PLAN="$ROOT_DIR/docs/plans/2026-06-26-wear-bidi-control-payload.md"
+WEAR_BIDI_CONTROL_MUTATION="$ROOT_DIR/scripts/test-wear-bidi-control-mutation.sh"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
@@ -82,6 +85,7 @@ for path in \
   "scripts/check-gradle-wrapper-provenance.py" \
   "scripts/test-gradle-wrapper-provenance.py" \
   "scripts/run-wear-message-policy-tests.sh" \
+  "scripts/test-wear-bidi-control-mutation.sh" \
   "Tests/WearMessagePolicyTests.java" \
   "Android/DisplayTweets/app/src/main/AndroidManifest.xml" \
   "Android/DisplayTweets/app/build.gradle" \
@@ -125,6 +129,8 @@ for path in \
   "docs/plans/2026-06-26-wear-destroyed-node-send-race.md" \
   "docs/plans/2026-06-26-display-destroyed-callback-design.md" \
   "docs/plans/2026-06-26-display-destroyed-callback.md" \
+  "docs/plans/2026-06-26-wear-bidi-control-payload-design.md" \
+  "docs/plans/2026-06-26-wear-bidi-control-payload.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
@@ -540,6 +546,48 @@ if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WE
   ! grep -Fq "messageData.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_POLICY" ||
   ! grep -Fq "containsUnsupportedControlCharacter(normalized)" "$WEAR_POLICY"; then
   printf '%s\n' "Wear policy must enforce byte, Unicode-whitespace, and control-character boundaries." >&2
+  exit 1
+fi
+
+for bidi_contract in \
+  "containsBidiControlCharacter(normalized)" \
+  "codePoint == 0x061C" \
+  "codePoint >= 0x200E && codePoint <= 0x200F" \
+  "codePoint >= 0x202A && codePoint <= 0x202E" \
+  "codePoint >= 0x2066 && codePoint <= 0x2069" \
+  "Character.charCount(codePoint)"; do
+  if ! grep -Fq "$bidi_contract" "$WEAR_POLICY"; then
+    printf '%s\n' "Wear policy must reject the Unicode Bidi_Control set: $bidi_contract" >&2
+    exit 1
+  fi
+done
+for bidi_test_contract in \
+  'expectRejected("hello\u061cworld"' \
+  'expectRejected("hello\u200eworld"' \
+  'expectRejected("hello\u202eworld"' \
+  'expectRejected("hello\u2066world"' \
+  'expectText("hello\u200dworld", "hello\u200dworld"'; do
+  if ! grep -Fq "$bidi_test_contract" "$ROOT_DIR/Tests/WearMessagePolicyTests.java"; then
+    printf '%s\n' "Wear bidi-control behavioral coverage is missing: $bidi_test_contract" >&2
+    exit 1
+  fi
+done
+if [ ! -x "$WEAR_BIDI_CONTROL_MUTATION" ] || \
+  [ "$(grep -Fc '$(ROOT)/scripts/test-wear-bidi-control-mutation.sh' "$ROOT_DIR/Makefile")" -ne 1 ]; then
+  printf '%s\n' "Wear bidi-control mutation test must be executable and run exactly once." >&2
+  exit 1
+fi
+for bidi_document in AGENTS.md README.md SECURITY.md VISION.md CHANGES.md; do
+  if ! grep -Fq "Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text" "$ROOT_DIR/$bidi_document"; then
+    printf '%s\n' "$bidi_document must document Wear bidi-control rejection." >&2
+    exit 1
+  fi
+done
+if ! grep -Fq "**Status:** Completed" "$WEAR_BIDI_CONTROL_PLAN" || \
+  ! grep -Fq "Wear bidi-control mutation was rejected" "$WEAR_BIDI_CONTROL_PLAN" || \
+  ! grep -Fq "Live Wear notification rendering was not exercised locally" "$WEAR_BIDI_CONTROL_PLAN" || \
+  ! grep -Fq 'Reject only the Unicode `Bidi_Control` property set' "$WEAR_BIDI_CONTROL_DESIGN"; then
+  printf '%s\n' "Wear bidi-control plans must retain the design and completed verification evidence." >&2
   exit 1
 fi
 
