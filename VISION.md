@@ -113,6 +113,8 @@ Contribution rules:
   tweet UI layouts.
 - Preserve the Wear mobile destroyed-activity guards at callback, dispatch, and
   reconnect boundaries.
+- Treat connected-node discovery and each node send as activity-owned lifecycle
+  handoffs with atomic dispatch admission.
 - Verify Twitter login/display behavior with local credentials when changing it.
 - Keep `.github/workflows/check.yml` in sync with the local static baseline.
 

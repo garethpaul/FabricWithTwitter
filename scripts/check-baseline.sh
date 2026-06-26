@@ -26,6 +26,8 @@ DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-p
 WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
 WEAR_DESTROYED_ACTIVITY_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-activity-callback-design.md"
 WEAR_DESTROYED_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-activity-callback.md"
+WEAR_NODE_DISPATCH_DESTRUCTION_DESIGN="$ROOT_DIR/docs/plans/2026-06-26-wear-node-dispatch-destruction-design.md"
+WEAR_NODE_DISPATCH_DESTRUCTION_PLAN="$ROOT_DIR/docs/plans/2026-06-26-wear-node-dispatch-destruction.md"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
@@ -117,6 +119,8 @@ for path in \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
   "docs/plans/2026-06-25-wear-destroyed-activity-callback-design.md" \
   "docs/plans/2026-06-25-wear-destroyed-activity-callback.md" \
+  "docs/plans/2026-06-26-wear-node-dispatch-destruction-design.md" \
+  "docs/plans/2026-06-26-wear-node-dispatch-destruction.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
@@ -463,7 +467,8 @@ if [ "$(grep -Fc "private static final int MAX_TWEET_PAYLOAD_BYTES = 1024;" "$WE
   ! grep -Fq "final byte[] tweetPayload = safeTweetText.getBytes(UTF_8);" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq "tweetPayload.length > MAX_TWEET_PAYLOAD_BYTES" "$WEAR_MOBILE_ACTIVITY" ||
   ! grep -Fq 'Log.d(TAG, "Skipping oversized wear tweet payload")' "$WEAR_MOBILE_ACTIVITY" ||
-  ! grep -Fq "messageClient, node.getId(), path, tweetPayload).await();" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "messageClient, node.getId(), path, tweetPayload);" "$WEAR_MOBILE_ACTIVITY" ||
+  ! grep -Fq "MessageApi.SendMessageResult result = pendingResult.await();" "$WEAR_MOBILE_ACTIVITY" ||
   grep -Fq "path, safeTweetText.getBytes(UTF_8)).await();" "$WEAR_MOBILE_ACTIVITY"; then
   printf '%s\n' "Wear mobile sender must enforce and reuse the reviewed 1024-byte payload limit." >&2
   exit 1
@@ -517,7 +522,8 @@ sender_contract = (
     "final byte[] tweetPayload = safeTweetText.getBytes(UTF_8);",
     "tweetPayload.length > MAX_TWEET_PAYLOAD_BYTES",
     "new Thread(new Runnable()",
-    "messageClient, node.getId(), path, tweetPayload).await();",
+    "messageClient, node.getId(), path, tweetPayload);",
+    "pendingResult.await();",
 )
 listener_contract = (
     "messageData == null || messageData.length == 0",
@@ -693,10 +699,16 @@ connect = worker.find("blockingConnect()")
 postconnect = worker.find("if (activityDestroyed)", preconnect + 1)
 disconnect = worker.find("messageClient.disconnect()", postconnect)
 nodes = worker.find("getConnectedNodes", disconnect)
-if min(preconnect, connect, postconnect, disconnect, nodes) < 0 or not (
+postnodes = worker.find("if (activityDestroyed)", nodes)
+loop = worker.find("for (Node node", postnodes)
+pernode = worker.find("if (activityDestroyed)", loop)
+send = worker.find("Wearable.MessageApi.sendMessage", pernode)
+await_result = worker.find("pendingResult.await()", send)
+if min(preconnect, connect, postconnect, disconnect, nodes, postnodes, loop, pernode, send, await_result) < 0 or not (
     preconnect < connect < postconnect < disconnect < nodes
+    < postnodes < loop < pernode < send < await_result
 ):
-    raise SystemExit("Wear message worker must reject destruction before and after reconnect")
+    raise SystemExit("Wear message worker must reject destruction across connection, node discovery, and per-node dispatch")
 
 destroy = source.split("protected void onDestroy()", 1)[1].split("public boolean onCreateOptionsMenu", 1)[0]
 destroyed = destroy.find("activityDestroyed = true;")
@@ -706,6 +718,11 @@ if min(destroyed, client_disconnect, super_destroy) < 0 or not (
     destroyed < client_disconnect < super_destroy
 ):
     raise SystemExit("Wear activity must publish destruction before disconnect and superclass teardown")
+
+if "private final Object activityLifecycleLock = new Object();" not in source or \
+        "synchronized (activityLifecycleLock)" not in worker or \
+        "synchronized (activityLifecycleLock)" not in destroy:
+    raise SystemExit("Wear per-node dispatch admission must be atomic with activity destruction")
 PY
 
 for lifecycle_plan in "$WEAR_DESTROYED_ACTIVITY_DESIGN" "$WEAR_DESTROYED_ACTIVITY_PLAN"; do
@@ -714,6 +731,24 @@ for lifecycle_plan in "$WEAR_DESTROYED_ACTIVITY_DESIGN" "$WEAR_DESTROYED_ACTIVIT
     exit 1
   fi
 done
+
+for dispatch_plan in "$WEAR_NODE_DISPATCH_DESTRUCTION_DESIGN" "$WEAR_NODE_DISPATCH_DESTRUCTION_PLAN"; do
+  if ! grep -Fq "status: completed" "$dispatch_plan" ||
+    ! grep -Fq "node discovery" "$dispatch_plan" ||
+    ! grep -Fq "per-node" "$dispatch_plan"; then
+    printf '%s\n' "Wear node-dispatch destruction plans must retain completed ownership evidence." >&2
+    exit 1
+  fi
+done
+
+if ! grep -Fq "per-node message submission is admitted atomically" "$ROOT_DIR/README.md" ||
+  ! grep -Fq "atomically prevent new dispatch admission" "$ROOT_DIR/SECURITY.md" ||
+  ! grep -Fq "atomic dispatch admission" "$ROOT_DIR/VISION.md" ||
+  ! grep -Fq "atomic per-node" "$ROOT_DIR/AGENTS.md" ||
+  ! grep -Fq "between multiple node" "$SAMPLE_VERIFICATION"; then
+  printf '%s\n' "Wear node-dispatch destruction guidance must remain synchronized." >&2
+  exit 1
+fi
 
 for lifecycle_document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
   if ! grep -Eq "destroyed|destruction" "$lifecycle_document"; then

@@ -72,6 +72,8 @@ responses out of source control and evidence.
 7. Delay login or tweet completion until after destroying the mobile activity.
    Confirm no tweet view is added, no message is sent, and a reconnect racing
    destruction is disconnected before the worker returns.
+8. Delay connected-node discovery or destroy the activity between multiple node
+   sends. Confirm no new message submission is admitted after destruction.
 
 ## Wear Listener And Notification
 

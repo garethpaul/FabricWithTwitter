@@ -1,5 +1,39 @@
 # Changes
 
+## 2026-06-26 - P1 - Wear node dispatch ownership
+
+### Summary
+
+Prevented activity destruction during connected-node discovery or between node
+sends from admitting another Wear message submission.
+
+### Work completed
+
+- Rechecked the activity owner immediately after connected-node discovery.
+- Paired each per-node destruction check and message submission atomically under
+  a lifecycle lock without holding that lock during remote completion.
+- Published destruction under the same lock before disconnecting the client.
+- Added red-first ordering, documentation, and manual device contracts.
+
+### Validation
+
+- Red phase: `make check` rejected the missing post-discovery and per-node
+  ownership guards.
+- Local and absolute-Makefile checks passed; two isolated hostile mutations
+  removing the post-discovery guard or shared per-node lock were rejected.
+- Shell syntax and diff checks passed. Swift execution and Xcode project listing
+  remain hosted requirements on this Linux workstation.
+
+### Bugs / findings
+
+- P1: `onDestroy` could race node discovery or a multi-node loop after the
+  existing post-connect guard and still allow a new message submission.
+
+### Next action
+
+- Open the focused PR, attempt Codex review, and merge only after exact-head
+  hosted checks pass.
+
 ## 2026-06-25 - P1 - Wear activity callback ownership
 
 ### Summary

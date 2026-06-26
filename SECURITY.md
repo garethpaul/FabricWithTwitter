@@ -51,6 +51,8 @@ Helpful reports include:
   stay null-safe when legacy layouts drift.
 - Wear mobile callbacks and message workers must not reconnect the
   `GoogleApiClient` or publish UI after their owning activity is destroyed.
+- Connected-node discovery and each per-node message submission remain owned by
+  the live activity; destruction must atomically prevent new dispatch admission.
 - Tweet loading flows should reset in-flight state on authentication failure and completion without logging raw Twitter errors.
 - iOS loaded TwitterKit response objects should be type-checked before they
   replace visible table contents.

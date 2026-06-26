@@ -68,6 +68,8 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 - Wear mobile callbacks and message workers must reject work after
   `MainActivity` destruction; if destruction races `blockingConnect`, disconnect
   before returning.
+- Preserve the post-node-discovery destruction guard and atomic per-node
+  dispatch admission under `activityLifecycleLock`.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.

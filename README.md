@@ -154,6 +154,8 @@ When the required SDK or runtime is unavailable, use static checks and source re
 - The Android Wear mobile sample rejects delayed login, tweet, and message work
   after activity destruction and disconnects a client if destruction races a
   blocking reconnect.
+- Connected-node discovery is followed by another owner check, and each
+  per-node message submission is admitted atomically with activity destruction.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest
@@ -208,6 +210,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   baseline.
 - See `docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md` for the
   exact iOS Twitter/X navigation host boundary.
+- See `docs/plans/2026-06-26-wear-node-dispatch-destruction-design.md` and
+  `docs/plans/2026-06-26-wear-node-dispatch-destruction.md` for node-discovery
+  and per-node dispatch ownership.
 
 ## Contributing
 
