@@ -69,6 +69,9 @@ responses out of source control and evidence.
    encoded for the expected `/new_tweet` path only when a Wear node is connected.
 6. Confirm payloads over 1024 UTF-8 bytes are rejected before transport and raw
    paths, payload text, node IDs, account data, or exceptions are not logged.
+7. Delay login or tweet completion until after destroying the mobile activity.
+   Confirm no tweet view is added, no message is sent, and a reconnect racing
+   destruction is disconnected before the worker returns.
 
 ## Wear Listener And Notification
 

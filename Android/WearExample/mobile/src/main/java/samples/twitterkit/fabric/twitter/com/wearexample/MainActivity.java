@@ -37,6 +37,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     private GoogleApiClient client;
     private TwitterLoginButton loginButton;
+    private volatile boolean activityDestroyed;
 
     private static final String PATH = "/new_tweet";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -64,9 +65,17 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             loginButton.setCallback(new Callback<TwitterSession>() {
                 @Override
                 public void success(Result<TwitterSession> result) {
+                    if (activityDestroyed) {
+                        Log.d(TAG, "Skipping login callback for destroyed activity");
+                        return;
+                    }
                     // Do something with result, which provides a
                     // TwitterSession for making API calls
                     loadTweets();
+                    if (activityDestroyed) {
+                        Log.d(TAG, "Skipping login callback for destroyed activity");
+                        return;
+                    }
                     if (loginButton != null) {
                         loginButton.setVisibility(View.INVISIBLE);
                     }
@@ -91,11 +100,19 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         TweetUtils.loadTweet(tweetId, new LoadCallback<Tweet>() {
             @Override
             public void success(Tweet tweet) {
+                if (activityDestroyed) {
+                    Log.d(TAG, "Skipping tweet callback for destroyed activity");
+                    return;
+                }
                 if (tweet == null || tweet.text == null || tweet.text.trim().length() == 0) {
                     Log.d(TAG, "Skipping wear message without tweet text");
                     return;
                 }
                 sendMessage(PATH, tweet.text.trim());
+                if (activityDestroyed) {
+                    Log.d(TAG, "Skipping tweet callback for destroyed activity");
+                    return;
+                }
                 final RelativeLayout tweetContainer
                         = (RelativeLayout) findViewById(R.id.tweet_view);
                 if (tweetContainer == null) {
@@ -128,6 +145,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     private void sendMessage( final String path, final String tweetText ) {
         final GoogleApiClient messageClient = client;
+        if (activityDestroyed) {
+            Log.d(TAG, "Skipping wear message for destroyed activity");
+            return;
+        }
         if (path == null || tweetText == null || messageClient == null) {
             Log.d(TAG, "Skipping wear message without path, tweet, or client");
             return;
@@ -146,8 +167,17 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         new Thread(new Runnable() {
             @Override
             public void run() {
+                if (activityDestroyed) {
+                    Log.d(TAG, "Skipping wear message for destroyed activity");
+                    return;
+                }
                 if (!messageClient.isConnected() && !messageClient.blockingConnect().isSuccess()) {
                     Log.d(TAG, "Skipping wear message without connected client");
+                    return;
+                }
+                if (activityDestroyed) {
+                    messageClient.disconnect();
+                    Log.d(TAG, "Skipping wear message for destroyed activity");
                     return;
                 }
 
@@ -163,10 +193,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        activityDestroyed = true;
         if (client != null && (client.isConnected() || client.isConnecting())) {
             client.disconnect();
         }
+        super.onDestroy();
     }
 
 
