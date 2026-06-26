@@ -1,5 +1,42 @@
 # Changes
 
+## 2026-06-25 - P1 - Wear activity callback ownership
+
+### Summary
+
+Prevented delayed TwitterKit callbacks from reconnecting the Wear
+`GoogleApiClient` or updating UI after the owning mobile activity is destroyed.
+
+### Work completed
+
+- Added a volatile activity-destruction signal checked by login and tweet
+  callbacks before asynchronous work and again before UI publication, plus
+  before message payload dispatch.
+- Checked the message worker both before and after `blockingConnect`; a client
+  connected while destruction races the worker is disconnected before return.
+- Published destruction before client disconnection and superclass teardown.
+- Added mutation-sensitive baseline contracts and manual device verification.
+
+### Validation
+
+- Observed `make check` fail first on the missing destruction signal.
+- The focused Wear policy harness, Python suites, and full local baseline pass;
+  Swift execution and Xcode project listing remain hosted requirements here.
+- Hostile removal of the tweet callback guard and post-connect destruction
+  cleanup were both rejected by the baseline.
+- Exact-diff review identified callback/UI interleavings after the first guard;
+  second guards now protect both login and tweet UI publication.
+
+### Bugs / findings
+
+- P1: A tweet callback completing after `onDestroy` could start a worker that
+  reconnected the activity-owned Wear client and then attempted dead-UI work.
+
+### Next action
+
+- Run hostile lifecycle mutations, hosted checks, and exact-head review before
+  merge.
+
 ## 2026-06-25 - P2 - modern platform alternatives
 
 ### Summary

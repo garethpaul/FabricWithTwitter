@@ -52,6 +52,9 @@ Current baseline:
   activity-result forwarding when legacy layouts drift.
 - The Android Wear mobile sample verifies that its tweet display container
   exists before adding a TwitterKit `TweetView`.
+- The Android Wear mobile sample rejects delayed callback and message work after
+  destruction so its activity-owned Wear client cannot be reconnected or used
+  to update dead UI.
 - Wear tweet loading skips missing, empty, or whitespace-only tweet text before
   sending messages to the watch or displaying watch notifications.
 - Wear tweet payloads are bounded to 1024 UTF-8 bytes before send and decode.
@@ -108,6 +111,8 @@ Contribution rules:
   Twitter login flow.
 - Preserve Wear mobile tweet display container guards when changing legacy
   tweet UI layouts.
+- Preserve the Wear mobile destroyed-activity guards at callback, dispatch, and
+  reconnect boundaries.
 - Verify Twitter login/display behavior with local credentials when changing it.
 - Keep `.github/workflows/check.yml` in sync with the local static baseline.
 

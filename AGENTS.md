@@ -65,6 +65,9 @@ and watchOS samples that demonstrate the retired Fabric and TwitterKit SDKs.
 - Wear notification PendingIntents must refresh the latest validated tweet extra.
 - WearableListenerService owns background message delivery; do not add a
   parallel GoogleApiClient listener registration or cleanup lifecycle.
+- Wear mobile callbacks and message workers must reject work after
+  `MainActivity` destruction; if destruction races `blockingConnect`, disconnect
+  before returning.
 
 - The iOS TableView sample type-checks TwitterKit response objects before
   replacing visible rows.

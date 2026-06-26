@@ -94,8 +94,10 @@ checked before setting tweet text, the notification detail activity is
 internal-only and has no launcher filter, the Wear listener is explicitly
 exported only for the system's `BIND_LISTENER` action, Wear mobile login button
 handling is null-safe, Wear mobile tweet display verifies that its container
-view exists before adding a `TweetView`, local credential files stay ignored,
-and Xcode project listing is attempted when `xcodebuild` is installed.
+view exists before adding a `TweetView`, delayed callbacks cannot reconnect the
+Wear client or update UI after the mobile activity is destroyed, local
+credential files stay ignored, and Xcode project listing is attempted when
+`xcodebuild` is installed.
 
 The `make lint`, `make test`, and `make build` aliases run the same static
 baseline while these legacy samples have no narrower installed gates here.
@@ -149,6 +151,9 @@ When the required SDK or runtime is unavailable, use static checks and source re
   when the login button view was initialized.
 - The Android Wear mobile sample verifies that the tweet display container
   exists before adding a TwitterKit `TweetView`.
+- The Android Wear mobile sample rejects delayed login, tweet, and message work
+  after activity destruction and disconnects a client if destruction races a
+  blocking reconnect.
 - Keep mobile-to-watch tweet message bytes explicitly encoded as UTF-8 so the
   watch listener decodes the same contract.
 - The iOS TableView sample clears its tweet-loading in-flight flag after guest

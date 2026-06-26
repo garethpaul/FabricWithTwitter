@@ -24,6 +24,8 @@ WEAR_PENDING_INTENT_PLAN="$ROOT_DIR/docs/plans/2026-06-13-wear-notification-pend
 LOCATION_INDEPENDENT_MAKE_PLAN="$ROOT_DIR/docs/plans/2026-06-13-location-independent-make.md"
 DEPENDENCY_PIN_PLAN="$ROOT_DIR/docs/plans/2026-06-14-legacy-android-dependency-pins.md"
 WEAR_LISTENER_LIFECYCLE_PLAN="$ROOT_DIR/docs/plans/2026-06-14-wear-listener-lifecycle.md"
+WEAR_DESTROYED_ACTIVITY_DESIGN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-activity-callback-design.md"
+WEAR_DESTROYED_ACTIVITY_PLAN="$ROOT_DIR/docs/plans/2026-06-25-wear-destroyed-activity-callback.md"
 IOS_TWEET_PERMALINK_PLAN="$ROOT_DIR/docs/plans/2026-06-14-ios-tweet-permalink-validation.md"
 IOS_TWEET_PERMALINK_HOST_PLAN="$ROOT_DIR/docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md"
 IOS_TWEET_PERMALINK_CHECK="$ROOT_DIR/scripts/check-ios-tweet-permalink.py"
@@ -113,6 +115,8 @@ for path in \
   "docs/plans/2026-06-13-location-independent-make.md" \
   "docs/plans/2026-06-14-legacy-android-dependency-pins.md" \
   "docs/plans/2026-06-14-wear-listener-lifecycle.md" \
+  "docs/plans/2026-06-25-wear-destroyed-activity-callback-design.md" \
+  "docs/plans/2026-06-25-wear-destroyed-activity-callback.md" \
   "docs/plans/2026-06-14-ios-tweet-permalink-validation.md" \
   "docs/plans/2026-06-15-ios-twitter-permalink-host-boundary.md" \
   "docs/plans/2026-06-16-executable-ios-tweet-permalink-policy-tests.md" \
@@ -635,6 +639,88 @@ if ! grep -Fq "final RelativeLayout tweetContainer" "$WEAR_MOBILE_ACTIVITY" ||
   printf '%s\n' "Wear mobile tweet display must guard missing container targets." >&2
   exit 1
 fi
+
+python3 - "$WEAR_MOBILE_ACTIVITY" <<'PY'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text(encoding="utf-8")
+required = (
+    "private volatile boolean activityDestroyed;",
+    "if (activityDestroyed) {",
+    'Log.d(TAG, "Skipping login callback for destroyed activity");',
+    'Log.d(TAG, "Skipping tweet callback for destroyed activity");',
+    'Log.d(TAG, "Skipping wear message for destroyed activity");',
+    "activityDestroyed = true;",
+)
+for contract in required:
+    if contract not in source:
+        raise SystemExit("Wear mobile destroyed-activity guard missing: " + contract)
+
+login_callback = source.split("public void success(Result<TwitterSession> result)", 1)[1].split(
+    "public void failure(TwitterException exception)", 1
+)[0]
+login_guards = [
+    index for index in range(len(login_callback))
+    if login_callback.startswith("if (activityDestroyed)", index)
+]
+login_load = login_callback.find("loadTweets()")
+login_ui = login_callback.find("loginButton.setVisibility")
+if len(login_guards) < 2 or not (login_guards[0] < login_load < login_guards[1] < login_ui):
+    raise SystemExit("Wear login callback must guard both request and UI publication")
+
+tweet_callback = source.split("public void success(Tweet tweet)", 1)[1].split(
+    "public void failure(TwitterException e)", 1
+)[0]
+tweet_guards = [
+    index for index in range(len(tweet_callback))
+    if tweet_callback.startswith("if (activityDestroyed)", index)
+]
+tweet_send = tweet_callback.find("sendMessage(PATH")
+tweet_ui = tweet_callback.find("findViewById(R.id.tweet_view)")
+if len(tweet_guards) < 2 or not (tweet_guards[0] < tweet_send < tweet_guards[1] < tweet_ui):
+    raise SystemExit("Wear tweet callback must guard both delivery and UI publication")
+
+send_message = source.split("private void sendMessage", 1)[1].split(
+    "new Thread(new Runnable()", 1
+)[0]
+if send_message.find("if (activityDestroyed)") > send_message.find("tweetText.trim()"):
+    raise SystemExit("Wear message dispatch must reject destroyed activity before payload work")
+
+worker = source.split("new Thread(new Runnable()", 1)[1].split("}).start();", 1)[0]
+preconnect = worker.find("if (activityDestroyed)")
+connect = worker.find("blockingConnect()")
+postconnect = worker.find("if (activityDestroyed)", preconnect + 1)
+disconnect = worker.find("messageClient.disconnect()", postconnect)
+nodes = worker.find("getConnectedNodes", disconnect)
+if min(preconnect, connect, postconnect, disconnect, nodes) < 0 or not (
+    preconnect < connect < postconnect < disconnect < nodes
+):
+    raise SystemExit("Wear message worker must reject destruction before and after reconnect")
+
+destroy = source.split("protected void onDestroy()", 1)[1].split("public boolean onCreateOptionsMenu", 1)[0]
+destroyed = destroy.find("activityDestroyed = true;")
+client_disconnect = destroy.find("client.disconnect()")
+super_destroy = destroy.find("super.onDestroy()")
+if min(destroyed, client_disconnect, super_destroy) < 0 or not (
+    destroyed < client_disconnect < super_destroy
+):
+    raise SystemExit("Wear activity must publish destruction before disconnect and superclass teardown")
+PY
+
+for lifecycle_plan in "$WEAR_DESTROYED_ACTIVITY_DESIGN" "$WEAR_DESTROYED_ACTIVITY_PLAN"; do
+  if ! grep -Fq "destroyed" "$lifecycle_plan"; then
+    printf '%s\n' "Wear destroyed-activity lifecycle plans must retain their ownership boundary." >&2
+    exit 1
+  fi
+done
+
+for lifecycle_document in "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$ROOT_DIR/VISION.md" "$ROOT_DIR/AGENTS.md" "$SAMPLE_VERIFICATION"; do
+  if ! grep -Eq "destroyed|destruction" "$lifecycle_document"; then
+    printf '%s\n' "$lifecycle_document must document the Wear mobile destroyed-activity boundary." >&2
+    exit 1
+  fi
+done
 
 if ! grep -Fq "lint: check" "$ROOT_DIR/Makefile" ||
   ! grep -Fq "test: check" "$ROOT_DIR/Makefile" ||
