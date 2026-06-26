@@ -8,6 +8,11 @@
 `garethpaul/FabricWithTwitter` contains legacy Android, Wear, iOS, and watchOS
 samples showing how the retired Fabric and TwitterKit SDKs were integrated.
 
+For a capability-by-capability replacement map covering Firebase Crashlytics,
+X OAuth and API access, browser fallback, and the current Wear OS Data Layer,
+see `docs/modern-platform-alternatives.md`. The guide is planning material and
+does not claim that these historical samples have been migrated.
+
 The portable Make gate compiles and executes the production iOS tweet permalink
 policy when `swiftc` is available. This proves the deterministic URL allowlist
 without claiming TwitterKit, simulator/device, live-service, Android, Wear, or
@@ -169,6 +174,10 @@ When the required SDK or runtime is unavailable, use static checks and source re
 
 ## Maintenance Notes
 
+- Use `docs/modern-platform-alternatives.md` before proposing SDK replacement.
+  It separates crash reporting, authentication, content lookup, and Wear
+  transport into independently verifiable stages and links current primary
+  provider documentation.
 - This looks like an Apple platform project or sample. Xcode, Swift, CocoaPods, and deployment target versions may need to match the original project era.
 - Run `make check` before pushing changes to Android manifests, Xcode project
   files, Fabric/Twitter integration, or credential handling.

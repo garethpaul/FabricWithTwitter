@@ -83,12 +83,14 @@ Current baseline:
   mobile/listener, iOS TableView, and WatchSample build/runtime evidence,
   privacy constraints, validated permalink/destructive paths, cleanup, and
   redaction without claiming that the matrix has been executed.
+- `docs/modern-platform-alternatives.md` maps retired crash reporting,
+  authentication, content lookup, browser fallback, and Wear transport to
+  current provider capabilities with separate security and validation gates.
 
 Next priorities:
 
 - Preserve the Android legacy dependency pins while planning a separately
   verified replacement for the retired toolchain
-- Document modern alternatives to Fabric/TwitterKit
 - Add executable login, display, Wear transport, and lifecycle tests after the
   retired dependencies can be isolated or replaced
 
