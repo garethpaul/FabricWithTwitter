@@ -39,6 +39,13 @@ historical samples.
   Swift execution and Xcode project listing remain hosted requirements here.
 - Shell syntax, Python compilation, diff whitespace, generated-artifact, and
   high-confidence credential-pattern audits passed.
+- Hosted Check run `28212810366` passed the Swift harness, Wear policy, Python
+  tests, both Xcode project-listing checks, and secret scan on commit
+  `b3d05df0581849cba97a51e033cc7b42d2fbea23`; CodeQL run `28212809543`
+  passed for Actions, Java/Kotlin, and Python.
+- The Codex review helper targeted `origin/master` but could not authenticate
+  with the OpenAI API (HTTP 401); exact-head manual review found no actionable
+  findings, and every cited primary documentation URL returned HTTP 200.
 
 ### Bugs / findings
 

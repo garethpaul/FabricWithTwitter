@@ -82,3 +82,12 @@ execution: documentation
 - Shell syntax, Python compilation, diff whitespace, generated-artifact, and
   high-confidence credential-pattern audits passed; the temporary Python cache
   created by compilation was removed.
+- Hosted Check run `28212810366` passed the Swift harness, Wear policy, Python
+  tests, both Xcode project-listing checks, and secret scan on commit
+  `b3d05df0581849cba97a51e033cc7b42d2fbea23`; CodeQL run `28212809543`
+  passed for Actions, Java/Kotlin, and Python.
+- The Codex review helper selected the PR base `origin/master` but failed with
+  HTTP 401 authentication errors. Per the maintenance instruction, that review
+  was skipped; exact-head manual review found no actionable findings.
+- All five linked Firebase, X, and Android primary documentation URLs returned
+  HTTP 200 during the PR review.
