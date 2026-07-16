@@ -12,7 +12,7 @@ check:
 		echo "swiftc unavailable; executable iOS tweet permalink policy tests skipped"; \
 	fi
 	@if "$(JAVAC)" -version >/dev/null 2>&1 && "$(JAVA)" -version >/dev/null 2>&1; then \
-		JAVAC="$(JAVAC)" JAVA="$(JAVA)" "$(ROOT)/scripts/run-wear-message-policy-tests.sh"; \
+		JAVAC="$(JAVAC)" JAVA="$(JAVA)" "$(ROOT)/scripts/run-wear-message-policy-tests.sh" && \
 		JAVAC="$(JAVAC)" JAVA="$(JAVA)" "$(ROOT)/scripts/test-wear-bidi-control-mutation.sh"; \
 	else \
 		echo "Java runtime unavailable; executable Wear message policy tests skipped"; \
