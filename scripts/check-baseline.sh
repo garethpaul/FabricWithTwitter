@@ -577,6 +577,10 @@ if [ ! -x "$WEAR_BIDI_CONTROL_MUTATION" ] || \
   printf '%s\n' "Wear bidi-control mutation test must be executable and run exactly once." >&2
   exit 1
 fi
+if ! grep -Fq '"$(ROOT)/scripts/run-wear-message-policy-tests.sh" && \' "$ROOT_DIR/Makefile"; then
+  printf '%s\n' "Wear message policy suite must be && -chained to the next suite so its failure cannot be swallowed by the recipe's exit status." >&2
+  exit 1
+fi
 for bidi_document in AGENTS.md README.md SECURITY.md VISION.md CHANGES.md; do
   if ! grep -Fq "Wear tweet payloads reject Unicode bidi controls while preserving zero-width-joiner text" "$ROOT_DIR/$bidi_document"; then
     printf '%s\n' "$bidi_document must document Wear bidi-control rejection." >&2
